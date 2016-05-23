@@ -1,0 +1,11 @@
+exportPattern("^[[:alpha:]]+")
+S3method(goftest, hill.adapt)
+S3method(goftest, hill.ts)
+S3method(plot, hill)
+S3method(plot, hill.adapt)
+S3method(predict, hill)
+S3method(predict, hill.adapt)
+S3method(predict, hill.ts)
+importFrom("graphics", "abline", "legend", "lines", "par", "plot",
+             "points", "title")
+importFrom("stats", "predict", "quantile", "runif")

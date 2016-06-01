@@ -1,6 +1,6 @@
-8525347c84503699541d45c55c01db13 *DESCRIPTION
+379b3059966f81b03f69545c3f23dffd *DESCRIPTION
 c9f69a20248f616e3db9da586d1db1b8 *NAMESPACE
-f4930bc7c9751401638665056e614580 *R/PackageOxygen.R
+87f2462d27192bf5948ce6a34f8369c0 *R/PackageOxygen.R
 04c52c3f096d24e9244811bc94e58767 *data/dataLoadCurve.rda
 649654c7570f5e66a28da7d120480b0f *data/dataOyster.rda
 83a94c02027cd01d91fd7a441cb146bd *data/dataWind.rda
@@ -21,7 +21,7 @@ a03df47f75615b5438a74d5485d11546 *man/Pareto-mix.Rd
 2c4985f1de10acb7c0f92757e4968620 *man/bootCI.ts.Rd
 701b9fc2cba68a6d5772466f5383904b *man/dataLoadCurve.Rd
 652871be8d9b2cbd9429862d03555082 *man/dataOyster.Rd
-ffe1f859c0b0c1b5af15e40a8493d9c8 *man/dataWind.Rd
+9685025939ebad424cef80c2f3870739 *man/dataWind.Rd
 ee1916ce6ff4dd12bcb71b563404296e *man/goftest.Rd
 321310c013cbcfc657773dc5c5f22805 *man/goftest.hill.adapt.Rd
 e375be030d58017626b2e36d3cf9ed1d *man/goftest.hill.ts.Rd

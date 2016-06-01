@@ -564,7 +564,7 @@ plot.hill.adapt <- function(x, ...){
   #abline(v =  k0, col = "red", lty = 2, lwd = 2)
   abline(v =  c(m1, m2), col = "magenta", lty = 2)
   title( paste("Pen Lik,  kadapt = ",  round(kadapt, 0))  );
-  plot(log(x$Xsort), 1-wecdf(x$Xsort, x$Xsort, x$sortweights), type = "s", xlab = "log(X)", ylab = "survival function",  ...)
+  plot(rev(log(x$Xsort)), 1-wecdf(x$Xsort, rev(x$Xsort), x$sortweights), type = "s", xlab = "log(X)", ylab = "survival function",  ...)
   abline(v =  log(x$Xadapt), col = "blue", lty = 2, lwd = 2)
   title(paste("Survival function,  threshold = ", round(x$Xadapt, 4)));
   par(mfrow = c(1, 1))
@@ -1991,7 +1991,7 @@ bandwidth.CV <- function(X, t, Tgrid, hgrid, pcv = 0.99, kernel = TruncGauss.ker
         par <- list(tx, kpar)
       }
       weights <- do.call(kernel, par)
-      quant[l] <- wquantile(Xhgrid, pcv, weights)
+      quant[l] <- wquantile(Xhgrid[!is.na(Xhgrid)], pcv, weights[!is.na(Xhgrid)])
     }
     return(quant)
   }
@@ -2009,7 +2009,7 @@ bandwidth.CV <- function(X, t, Tgrid, hgrid, pcv = 0.99, kernel = TruncGauss.ker
         par <- list(tx, kpar)
       }
       Wtgrid <- do.call(kernel, par)
-      QQ <- wquantile(Xtgrid, pcv, Wtgrid)
+      QQ <- wquantile(Xtgrid[!is.na(Xtgrid)], pcv, Wtgrid[!is.na(Xtgrid)])
       ind <- which(Xtgrid == QQ)
       Wtgrid <- Wtgrid[-ind]
       Xtgrid <- Xtgrid[-ind]

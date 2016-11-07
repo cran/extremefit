@@ -15,7 +15,7 @@ Gaussian kernel function.
 \details{
 The Gaussian Kernel we use is rescaled with coefficient 3 and truncated on the interval [-1,1] :
 \deqn{
-  K(x) = (1/{sqrt(2 \pi)}  exp(-(3x)^2/2)) (abs(x) <= 1)
+  K(x) = (1/sqrt(2 \pi)  exp(-(3x)^2/2)) (abs(x) <= 1)
 }
 We recommend a critical value of 2.7 for this kernel. The effective bandwidth is three time the bandwidth corresponding to the standard gaussian kernel.
 }

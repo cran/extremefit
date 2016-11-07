@@ -9,12 +9,14 @@ High-frequency noninvasive valvometry data
 }
 \usage{data("dataOyster")}
 \format{
-  A data frame with 18000 observations for 3 variables.
+  A list of 2 elements.
   \describe{
+    \item{\code{$data : a data frame with 18000 observations for 3 variables}}{\describe{
     \item{\code{time}}{Time of measurement (in hours).}
     \item{\code{opening}}{opening amplitude between the two shells (in mm).}
-    \item{\code{velocity}}{a numeric vector (in mm/s).}
-  }
+    \item{\code{velocity}}{a numeric vector (in mm/s). Negative values correspond to the opening velocity of the shells and positive values to the closing velocity of the shells.}}}
+ 	 \item{\code{$Tgrid : A grid of time to perform the procedure.}}{}
+    } 
 }
 \references{
 Durrieu, G., Grama, I., Pham, Q. & Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
@@ -34,7 +36,7 @@ Velocity<-dataOyster$data[,3]
 time<-dataOyster$data[,1]
 plot(time,Velocity,type="l",xlab="time (hour)",ylab="Velocity (mm/s)")
 
-Tgrid<-seq(0,24,0.1) 
+Tgrid<-seq(0,24,0.05) 
 #Grid with positive velocity
 new.Tgrid<-dataOyster$Tgrid
 
@@ -42,32 +44,30 @@ X<-Velocity+(-min(Velocity)) #We adjust the data to be positive
 
 \dontrun{ #For computing time purpose
 #We find the h by minimizing the cross validation function 
-hgrid<-bandwidth.grid(0.05,0.8,30,type="geometric")
-indices<-round(seq(1,length(new.Tgrid),length=30))
-TgridCV<-new.Tgrid[indices]
-#the following function takes 15.87 secs on 2,5 GHz Intel Core i7, 16 GB 1600 MHz DDR3
-H<-bandwidth.CV(X,time,TgridCV,hgrid,
-                  TruncGauss.kernel,kpar=c(sigma=1),pcv=0.99,CritVal=3.6,plot=TRUE)
-hcv<-H$h.cv
 
+hgrid<-bandwidth.grid(0.05,0.5,50,type="geometric")
+
+
+#H<-bandwidth.CV(X,time,new.Tgrid,hgrid,
+#                  TruncGauss.kernel,kpar=c(sigma=1),pcv=0.99,CritVal=3.6,plot=TRUE)
+#hcv<-H$h.cv
+
+hcv <- 0.2981812
 #we use our method with the h found previously
 TS.Oyster<-hill.ts(X,t=time,new.Tgrid,h=hcv,TruncGauss.kernel,kpar=c(sigma=1),
           CritVal=3.6,gridlen=100,initprop = 1/10, r1 = 1/4, r2 = 1/20)
           
-plot(time,Velocity,type="l",ylim=c(-0.6,1.6),
+plot(time,Velocity,type="l",ylim=c(-0.6,1),
     main="Extreme quantiles estimator",
     xlab="Time (hour)",ylab="Velocity (mm/s)")
 pgrid<-c(0.999)
 pred.quant.Oyster<-predict(TS.Oyster,X,t=time,pgrid=pgrid,type="quantile")
 
 quant0.999<-rep(0,length(Tgrid))
-for(ii in 1:length(new.Tgrid)){
-  quant0.999[which(Tgrid==new.Tgrid[ii])]<-as.numeric(pred.quant.Oyster$quantile)[ii]-
+  quant0.999[match(new.Tgrid,Tgrid)]<-as.numeric(pred.quant.Oyster$quantile)-
   (-min(Velocity))
-  }
 lines(Tgrid,quant0.999,col="magenta")   
 
-legend("topright",c("0.999-quantile"),col=c("magenta"),pch="-")
 
 }
 }

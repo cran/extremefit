@@ -779,7 +779,7 @@ TruncGauss.kernel <- function(x,sigma=1){
 #'
 #' @details The Gaussian Kernel we use is rescaled with coefficient 3 and truncated on the interval [-1,1] :
 #' \deqn{
-#'   K(x) = (1/{sqrt(2 \pi)}  exp(-(3x)^2/2)) (abs(x) <= 1)
+#'   K(x) = (1/sqrt(2 \pi)  exp(-(3x)^2/2)) (abs(x) <= 1)
 #' }
 #' We recommend a critical value of 2.7 for this kernel. The effective bandwidth is three time the bandwidth corresponding to the standard gaussian kernel.
 #'
@@ -1253,14 +1253,21 @@ predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length
     n <- length(object$Xsort)
     X <- object$Xsort
     Theta <- object$hadapt
-    weights <- object$sortweights
-    Xsort <- sort(X)
-    Xord <- (order(X))
-    word <- weights[Xord]
-    p0 <- wecdf(Xsort, object$Xadapt, word)
-    x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
-    x2 <- object$Xadapt*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
-    y <- as.numeric(c(x1, x2))
+    if(!is.na(Theta)){
+      weights <- object$sortweights
+      Xsort <- sort(X)
+      Xord <- (order(X))
+      word <- weights[Xord]
+      p0 <- wecdf(Xsort, object$Xadapt, word)
+      x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
+      x2 <- object$Xadapt*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
+      y <- as.numeric(c(x1, x2))
+    }else{
+      weights <- object$sortweights
+      Xsort <- sort(X)
+      x1 <- wquantile(Xsort, pgrid, weights)
+      y <- x1
+    }
     res <- list(pgrid = pgrid, y = y[!is.na(y)])
     class(res) <- "predict.adapt"
     #attr(res,  "call")  <-  sys.call()
@@ -1272,12 +1279,19 @@ predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length
     proGrid <- wecdf(object$Xsort, NX, object$sortweights)
     tau <- object$Xadapt
     Theta <- object$hadapt
-    x1 <- 1-proGrid[which(NX<tau)]
-    x2 <- (1-ppareto(NX[which(NX>= tau)], a = 1/Theta, scale = tau))*(1-proGrid[which(NX == tau)])
-    y <- c(x1, x2)
-    if(length(xgrid[which(xgrid == tau)]) == 0){
-      y <- sort(y[-which(NX == tau)], decreasing = TRUE)
-      NX <- NX[-which(NX == tau)]
+    if(!is.na(Theta)){
+      x1 <- 1-proGrid[which(NX<tau)]
+      x2 <- (1-ppareto(NX[which(NX>= tau)], a = 1/Theta, scale = tau))*(1-proGrid[which(NX == tau)])
+      y <- c(x1, x2)
+      if(length(xgrid[which(xgrid == tau)]) == 0){
+        y <- sort(y[-which(NX == tau)], decreasing = TRUE)
+        NX <- NX[-which(NX == tau)]
+      }
+    }else{
+      proGrid <- wecdf(Xsort, NX, weights)
+      x1 <- 1-proGrid
+      x <- c(x1)
+      y <- sort(x, decreasing = TRUE)
     }
     res <- list(x = NX, y = y)
     class(res) <- "predict.adapt"
@@ -1465,21 +1479,36 @@ predict.hill.ts <- function(object, X, t, pgrid = 1:(length(X)-1)/length(X), xgr
     }else{h <- object$h}
     y <- NULL
     for(i in 1:length(Tgrid)){
-      indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
-      t.ind <- t[indices]
-      tx <- (t.ind-Tgrid[i])/h[i]
-      if( is.null(object$kpar) ){
-        par <- list(tx)
+      if(!is.na(Theta[i])){
+        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+        t.ind <- t[indices]
+        tx <- (t.ind-Tgrid[i])/h[i]
+        if( is.null(object$kpar) ){
+          par <- list(tx)
+        }else{
+          par <- list(tx, object$kpar)
+        }
+        weights <- do.call(kernel,par)
+        Xt <- X[indices]
+        p0 <- wecdf(Xt, tau[i], weights)
+        #pgrid <- sort(c(p0, pgrid))
+        x1 <- wquantile(Xt, pgrid[which(pgrid<= p0)], weights)
+        x2 <- tau[i]*((1-p0)/(1-pgrid[which(pgrid>p0)]))^(Theta[i])
+        y <- cbind(y, c(x1, x2))
       }else{
-        par <- list(tx, object$kpar)
+        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+        t.ind <- t[indices]
+        tx <- (t.ind-Tgrid[i])/h[i]
+        if( is.null(object$kpar) ){
+          par <- list(tx)
+        }else{
+          par <- list(tx, object$kpar)
+        }
+        weights <- do.call(kernel,par)
+        Xt <- X[indices]
+        x1 <- wquantile(Xt, pgrid, weights)
+        y <- cbind(y, x1)
       }
-      weights <- do.call(kernel,par)
-      Xt <- X[indices]
-      p0 <- wecdf(Xt, tau[i], weights)
-      #pgrid <- sort(c(p0, pgrid))
-      x1 <- wquantile(Xt, pgrid[which(pgrid<= p0)], weights)
-      x2 <- tau[i]*((1-p0)/(1-pgrid[which(pgrid>p0)]))^(Theta[i])
-      y <- cbind(y, c(x1, x2))
     }
     return(list(pgrid = pgrid, Tgrid = Tgrid, quantiles = y))
   }
@@ -1494,23 +1523,40 @@ predict.hill.ts <- function(object, X, t, pgrid = 1:(length(X)-1)/length(X), xgr
     }else{h <- object$h}
     y <- NULL
     for(i in 1:length(Tgrid)){
-      NX <- sort(unique(c(tau[i], xgrid)))
-      indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
-      t.ind <- t[indices]
-      tx <- (t.ind-Tgrid[i])/h[i]
-      if( is.null(object$kpar) ){
-        par <- list(tx)
+      if(!is.na(Theta[i])){
+        NX <- sort(unique(c(tau[i], xgrid)))
+        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+        t.ind <- t[indices]
+        tx <- (t.ind-Tgrid[i])/h[i]
+        if( is.null(object$kpar) ){
+          par <- list(tx)
+        }else{
+          par <- list(tx, object$kpar)
+        }
+        weights <- do.call(kernel,par)
+        proGrid <- wecdf(X[indices], NX, weights)
+        x1 <- 1-proGrid[which(NX<= tau[i])]
+        x2 <- (1-ppareto(NX[which(NX>tau[i])], a = 1/Theta[i], scale = tau[i]))*(1-proGrid[which(NX == tau[i])])
+        x <- c(x1, x2)
+        if((length(xgrid[which(xgrid == tau[i])]) == 0)){
+          y <- cbind(y, sort(x[-which(NX == tau[i])], decreasing = TRUE))
+        }else{y <- cbind(y, sort(x, decreasing = TRUE))}
       }else{
-        par <- list(tx, object$kpar)
+        NX <- sort(xgrid)
+        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+        t.ind <- t[indices]
+        tx <- (t.ind-Tgrid[i])/h[i]
+        if( is.null(object$kpar) ){
+          par <- list(tx)
+        }else{
+          par <- list(tx, object$kpar)
+        }
+        weights <- do.call(kernel,par)
+        proGrid <- wecdf(X[indices], NX, weights)
+        x1 <- 1-proGrid
+        x <- c(x1)
+        y <- cbind(y, sort(x, decreasing = TRUE))
       }
-      weights <- do.call(kernel,par)
-      proGrid <- wecdf(X[indices], NX, weights)
-      x1 <- 1-proGrid[which(NX<= tau[i])]
-      x2 <- (1-ppareto(NX[which(NX>tau[i])], a = 1/Theta[i], scale = tau[i]))*(1-proGrid[which(NX == tau[i])])
-      x <- c(x1, x2)
-      if(length(xgrid[which(xgrid == tau[i])]) == 0){
-        y <- cbind(y, sort(x[-which(NX == tau[i])], decreasing = TRUE))
-      }else{y <- cbind(y, sort(x, decreasing = TRUE))}
     }
     return(list(xgrid = sort(xgrid), Tgrid = Tgrid, surv = y))
   }else{cat("please choose a type between quantile and survival")}

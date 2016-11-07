@@ -3,7 +3,7 @@
 \docType{data}
 \title{Wind speed for Brest (France)}
 \description{The data frame provides the wind speed of Brest from 1976 to 2005.}
-\usage{data("dataLoadCurve")}
+\usage{data("dataWind")}
 \format{The data is the wind speed in meters per second (m/s) every day from 1976 to 2005.
 \describe{
 \item{\code{Year}}{The year of the measure.}

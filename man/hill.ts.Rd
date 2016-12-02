@@ -2,10 +2,13 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{hill.ts}
 \alias{hill.ts}
+\alias{print.hill.ts}
 \title{Compute the extreme quantile procedure on a time dependent data}
 \usage{
 hill.ts(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL,
   CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
+
+\method{print}{hill.ts}(x, ...)
 }
 \arguments{
 \item{X}{a vector of the observed values.}
@@ -29,6 +32,10 @@ hill.ts(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL,
 \item{r1}{the r1 parameter used in the function hill.adapt. The proportion from the right that we will skip in the test statistic.}
 
 \item{r2}{the r2 parameter used in the function hill.adapt. The proportion from the left that we will skip in the test statistic.}
+
+\item{x}{the result of the hill.ts function}
+
+\item{...}{further arguments to be passed from or to other methods.}
 }
 \value{
 \item{Tgrid}{the given vector \eqn{Tgrid}.}
@@ -38,6 +45,8 @@ hill.ts(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL,
 }
 \description{
 Compute the function hill.adapt on time dependent data.
+
+Prints a hill.ts object
 }
 \details{
 For a given time serie and kernel function, the function hill.ts will give the results of the adaptive procedure for each \eqn{t}. The adaptive procedure is described in Durrieu et al. (2005).

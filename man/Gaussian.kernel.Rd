@@ -10,18 +10,18 @@ Gaussian.kernel(x)
 \item{x}{a vector.}
 }
 \description{
-Gaussian kernel function.
+Gaussian kernel function
 }
 \details{
-The Gaussian Kernel we use is rescaled with coefficient 3 and truncated on the interval [-1,1] :
+Gaussian Kernel with the value of standard deviation equal to 1/3.
 \deqn{
-  K(x) = (1/sqrt(2 \pi)  exp(-(3x)^2/2)) (abs(x) <= 1)
+  K(x) = (1/{(1/3)*sqrt(2 \pi)}  exp(-(3*x)^2/2)) (abs(x) <= 1)
 }
-We recommend a critical value of 2.7 for this kernel. The effective bandwidth is three time the bandwidth corresponding to the standard gaussian kernel.
+We recommend a critical value of 8.3 for this kernel.
 }
 \examples{
-plot(function(x) Gaussian.kernel(x), -1, 1,
-main = "Gaussian kernel")
+plot(function(x) Gaussian.kernel(x), -2, 2,
+main = " Gaussian kernel")
 
 }
 

@@ -4,16 +4,13 @@
 \alias{predict.hill}
 \title{Predict the adaptive Survival or Quantile function}
 \usage{
-\method{predict}{hill}(object, pgrid = 1:(length(object$xsort) -
-  1)/length(object$xsort), xgrid = object$xsort, type = "quantile",
+\method{predict}{hill}(object, newdata = NULL, type = "quantile",
   threshold.rank = 0, threshold = 0, ...)
 }
 \arguments{
 \item{object}{output  object of the function hill.}
 
-\item{pgrid}{used if type = "quantile", a vector of probabilities.}
-
-\item{xgrid}{used if type = "survival", a vector of values.}
+\item{newdata}{optionally, a vector with which to predict. If omitted, the original data points are used.}
 
 \item{type}{either "quantile" or "survival".}
 
@@ -30,7 +27,7 @@ The function provide the quantile assiociated to the adaptive model for the prob
 Give the adaptive survival function or quantile function
 }
 \details{
-If type = "quantile", \eqn{pgrid} must be between 0 and 1. If type = "survival", \eqn{xgrid} must be in the domain of the data from the \code{hill} function.
+If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the \code{hill} function.
 }
 \examples{
 x <- abs(rcauchy(100))

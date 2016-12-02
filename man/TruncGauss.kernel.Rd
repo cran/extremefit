@@ -17,7 +17,7 @@ Truncated Gaussian kernel function
 \details{
 Truncated Gaussian Kernel with \eqn{sigma} the standard deviation parameter with default value \eqn{1}.
 \deqn{
-  K(x) = (1/{sqrt(2 \pi)}  exp(-(x/sigma)^2/2)) (abs(x) <= 1)
+  K(x) = (1/{sigma*sqrt(2 \pi)}  exp(-(x/sigma)^2/2)) (abs(x) <= 1)
 }
 We recommend a critical value of 3.6 for this kernel with sigma=1.
 }

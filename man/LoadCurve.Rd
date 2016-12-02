@@ -21,25 +21,28 @@ data("LoadCurve")
 
 X<-LoadCurve$data$Value
 days<-LoadCurve$data$Time
+Tgrid <- seq(min(days), max(days), length = 400)
 new.Tgrid <- LoadCurve$Tgrid
 \dontrun{ #For computing time purpose
 # Choice of the bandwidth by cross validation. 
-# We choose the Gaussian kernel and the critical value 2.7. 
+# We choose the truncated Gaussian kernel and the critical value 
+# of the goodness-of-fit test 3.6. 
 # As the computing time is high, we give the value of the bandwidth.
 
 #hgrid <- bandwidth.grid(0.8, 5, 60)
-#hcv<-bandwidth.CV(X, days, new.Tgrid, hgrid, pcv = 0.99, 
-# kernel = Gaussian.kernel, #CritVal = 2.7, plot = FALSE)
+#hcv<-bandwidth.CV(X=X, t=days, new.Tgrid, hgrid, pcv = 0.99,
+#                 kernel = TruncGauss.kernel, CritVal = 3.6, plot = FALSE)
 #h.cv <- hcv$h.cv
 
-h.cv <- 3.444261
-HH<-hill.ts(X, days, new.Tgrid, h=h.cv, kernel = Gaussian.kernel,CritVal = 2.7)
+h.cv <- 3.041852
+HH<-hill.ts(X, days, new.Tgrid, h=h.cv, kernel = TruncGauss.kernel, CritVal = 3.6)
 
-Tgrid<-seq(min(days),max(days),length=400)
 Quant<-rep(NA,length(Tgrid))
 Quant[match(new.Tgrid, Tgrid)]<-as.numeric(predict(HH, 
-            X, days, pgrid = 0.99, type = "quantile")$quantiles)
-
+            newdata = 0.99, type = "quantile")$y)
+            
+Date<-as.POSIXct(days*86400, origin = "1970-01-01",
+                 tz = "Europe/Paris")
 plot(Date, X/1000, ylim = c(0, 8),
       type = "l", ylab = "Electric consumption (kVA)", xlab = "Time")
 

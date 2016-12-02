@@ -261,10 +261,16 @@ hill.adapt <- function(X,  weights = rep(1, length(X)) ,  initprop = 1/10,  grid
   # program body of the function hill.adapt
 
   n <- length(X)
-  wh <- hill(X, w = weights)
-  Xsort <- sort(X, decreasing = TRUE)
-  order <- rev(order(X))
-  sortweights <- weights[order]
+  idx <- split(1:n, X)
+  test<-data.frame(X=sapply(idx, function(i) X[i[1]]),
+                   w=sapply(idx, function(i) sum(weights[i])))
+  Xunique<-test$X
+  Wunique<-test$w
+  n <- length(Xunique)
+  wh <- hill(Xunique, w = Wunique)
+  Xsort <- sort(Xunique, decreasing = TRUE)
+  order <- rev(order(Xunique))
+  sortweights <- Wunique[order]
   cumsumw <- cumsum(sortweights)
   initprop <- max(initprop,3/n)  # = ifelse(floor(n*initprop) > 3, initprop, 3/n)
   gridlen <- min(gridlen,n-1)
@@ -319,7 +325,7 @@ hill.adapt <- function(X,  weights = rep(1, length(X)) ,  initprop = 1/10,  grid
         #cat("this line is to check correctness in hill.adapt: m = ", m, "\n") #  this line is to print m
         #cat("this line is to check correctness in hill.adapt: indm = ", indm, "\n") #  this line is to print m
 
-        TTSS <- WeightedTestStatist(X, weights, m)  # compute the test statistic
+        TTSS <- WeightedTestStatist(Xunique, Wunique, m)  # compute the test statistic
         TS <- TTSS$WTS1 + TTSS$WTS2		# computed at     X_2, X_3, ..., X_m
         TS1 <- TTSS$WTS1					# computed at     X_2, X_3, ..., X_m
         TS <- c(NA, TS)						# computed at X_1, X_2, X_3, ..., X_m
@@ -662,6 +668,8 @@ wecdf <- function(X, x, weights = rep(1, length(X))){
 #' @param initprop the initprop parameter used in the function hill.adapt. The initial proportion at which we will begin to test the model.
 #' @param r1 the r1 parameter used in the function hill.adapt. The proportion from the right that we will skip in the test statistic.
 #' @param r2 the r2 parameter used in the function hill.adapt. The proportion from the left that we will skip in the test statistic.
+#' @param x the result of the hill.ts function
+#' @param ... further arguments to be passed from or to other methods.
 #'
 #' @details For a given time serie and kernel function, the function hill.ts will give the results of the adaptive procedure for each \eqn{t}. The adaptive procedure is described in Durrieu et al. (2005).
 #'
@@ -741,11 +749,53 @@ hill.ts <- function(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL, Cri
     return(list(tau = tau.adapt, theta = theta.adapt, kadapt = k.adapt))
   }
   result <- sapply(Tgrid,  timeSeriehill.adapt)
-  res <- list(Tgrid = Tgrid, h = h, kernel = kernel,kpar=kpar, CritVal = CritVal, r1 = r1, r2 = r2, threshold = as.numeric(result[1, ]), Theta = as.numeric(result[2, ]), kadapt = as.numeric(result[3, ]))
+  res <- list(X = X, t = t, Tgrid = Tgrid, h = h, kernel = kernel,
+              kpar = kpar, CritVal = CritVal, r1 = r1, r2 = r2, threshold = as.numeric(result[1, ]),
+              Theta = as.numeric(result[2, ]), kadapt = as.numeric(result[3, ]))
   class(res) <- "hill.ts"
   #attr(res,  "call")  <-  sys.call()
   res
 }
+
+
+#' Prints a hill.ts object
+#'
+#'
+#' @rdname hill.ts
+#' @export print hill.ts
+print.hill.ts<-function(x,...){
+  result <- list(Tgrid = x$Tgrid, threshold = x$threshold, Theta = x$Theta)
+  result
+}
+
+
+
+
+#' Gaussian kernel function
+#'
+#' @description Gaussian kernel function
+#'
+#' @param x a vector.
+#'
+#' @details Gaussian Kernel with the value of standard deviation equal to 1/3.
+#' \deqn{
+#'   K(x) = (1/{(1/3)*sqrt(2 \pi)}  exp(-(3*x)^2/2)) (abs(x) <= 1)
+#' }
+#' We recommend a critical value of 8.3 for this kernel.
+#'
+#'
+#' @export
+#'
+#' @examples
+#' plot(function(x) Gaussian.kernel(x), -2, 2,
+#' main = " Gaussian kernel")
+#'
+Gaussian.kernel <- function(x){
+  return((1/((1/3)*sqrt(2*pi))*exp(-(3*x)^2/2))*(abs(x)<= 1))
+}
+
+
+
 
 #' Truncated Gaussian kernel function
 #'
@@ -756,7 +806,7 @@ hill.ts <- function(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL, Cri
 #'
 #' @details Truncated Gaussian Kernel with \eqn{sigma} the standard deviation parameter with default value \eqn{1}.
 #' \deqn{
-#'   K(x) = (1/{sqrt(2 \pi)}  exp(-(x/sigma)^2/2)) (abs(x) <= 1)
+#'   K(x) = (1/{sigma*sqrt(2 \pi)}  exp(-(x/sigma)^2/2)) (abs(x) <= 1)
 #' }
 #' We recommend a critical value of 3.6 for this kernel with sigma=1.
 #'
@@ -768,31 +818,9 @@ hill.ts <- function(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL, Cri
 #' main = " Truncated Gaussian kernel")
 #'
 TruncGauss.kernel <- function(x,sigma=1){
-  return((1/sqrt(2*pi)*exp(-(x/sigma)^2/2))*(abs(x)<= 1))
+  return((1/(sigma*sqrt(2*pi))*exp(-(x/sigma)^2/2))*(abs(x)<= 1))
 }
 
-#' Gaussian kernel function
-#'
-#' @description Gaussian kernel function.
-#'
-#' @param x a vector.
-#'
-#' @details The Gaussian Kernel we use is rescaled with coefficient 3 and truncated on the interval [-1,1] :
-#' \deqn{
-#'   K(x) = (1/sqrt(2 \pi)  exp(-(3x)^2/2)) (abs(x) <= 1)
-#' }
-#' We recommend a critical value of 2.7 for this kernel. The effective bandwidth is three time the bandwidth corresponding to the standard gaussian kernel.
-#'
-#'
-#' @export
-#'
-#' @examples
-#' plot(function(x) Gaussian.kernel(x), -1, 1,
-#' main = "Gaussian kernel")
-#'
-Gaussian.kernel <- function(x){
-  return((1/sqrt(2*pi)*exp(-(x*3)^2/2))*(abs(x)<= 1))
-}
 
 #' Epanechnikov kernel function
 #'
@@ -1211,12 +1239,11 @@ goftest.hill.ts <- function(object, X, t, plot = FALSE, ...){
 #' @description Give the adaptive survival function or quantile function
 #'
 #' @param object output object of the function hill.adapt.
-#' @param pgrid used if type = "quantile", a vector of probabilities.
-#' @param xgrid used if type = "survival", a vector of values.
+#' @param newdata optionally, a vector with which to predict. If omitted, the original data points are used.
 #' @param type either "quantile" or "survival".
 #' @param ... further arguments passed to or from other methods.
 #'
-#' @details If type = "quantile", \eqn{pgrid} must be between 0 and 1. If type = "survival", \eqn{xgrid} must be in the domain of the data from the \code{hill.adapt} function.
+#' @details If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the \code{hill.adapt} function.
 #'
 #' @return The function provide the quantile assiociated to the adaptive model for the probability grid (transformed to -log(1-p) in the output) if type = "quantile". And the survival function assiociated to the adaptive model for the quantile grid if type = "survival".
 #'
@@ -1230,20 +1257,20 @@ goftest.hill.ts <- function(object, X, t, plot = FALSE, ...){
 #' HH <- hill.adapt(x, weights=rep(1, length(x)), initprop = 0.1,
 #'                gridlen = 100 , r1 = 0.25, r2 = 0.05, CritVal=10)
 #'
-#' pgrid <- probgrid(p1 = 0.01, p2 = 0.999, length = 100)
-#' pred.quantile <- predict(HH, pgrid = pgrid, type = "quantile")#quantile function
-#' xgrid <- seq(0, 50, 0.1)
-#' pred.survival <- predict(HH, xgrid = xgrid, type = "survival")#survival function
+#' newdata <- probgrid(p1 = 0.01, p2 = 0.999, length = 100)
+#' pred.quantile <- predict(HH, newdata, type = "quantile")
+#' newdata <- seq(0, 50, 0.1)
+#' pred.survival <- predict(HH, newdata, type = "survival")#survival function
 #'
 #' #compare the theorical quantile and the adaptive one.
-#' predict(HH, pgrid = 0.9999, type = "quantile")
+#' predict(HH, 0.9999, type = "quantile")
 #' qparetoCP(0.9999)
 #'
 #' #compare the theorical probability and the adaptive one assiociated to a quantile.
-#' predict(HH, xgrid = 20, type = "survival")
+#' predict(HH, 20, type = "survival")
 #' 1 - pparetoCP(20)
 #'
-predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length(object$Xsort), xgrid = object$Xsort, type = "quantile",  ...){
+predict.hill.adapt <- function(object, newdata = NULL, type = "quantile",  ...){
   # Input: hill.adapt is the output of the function hill.adapt
   # grid is a probabilities grid if type = "quantile" or a quantile grid if type = "survival"
   # type is either quantile to estimate the quantiles or survival to estimate the survival function
@@ -1253,6 +1280,8 @@ predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length
     n <- length(object$Xsort)
     X <- object$Xsort
     Theta <- object$hadapt
+    pgrid <- newdata
+    if(is.null(pgrid)){pgrid <- 1:(length(object$Xsort)-1)/length(object$Xsort)}
     if(!is.na(Theta)){
       weights <- object$sortweights
       Xsort <- sort(X)
@@ -1268,13 +1297,15 @@ predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length
       x1 <- wquantile(Xsort, pgrid, weights)
       y <- x1
     }
-    res <- list(pgrid = pgrid, y = y[!is.na(y)])
+    res <- list(p = pgrid, y = y[!is.na(y)])
     class(res) <- "predict.adapt"
     #attr(res,  "call")  <-  sys.call()
     res
   }else if(type == "survival"){
     n <- length(object$Xsort)
     Xsort <- sort(object$Xsort)
+    xgrid <- newdata
+    if(is.null(xgrid)){xgrid <- object$Xsort}
     NX <- sort(unique(c(object$Xadapt, xgrid)))
     proGrid <- wecdf(object$Xsort, NX, object$sortweights)
     tau <- object$Xadapt
@@ -1293,7 +1324,7 @@ predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length
       x <- c(x1)
       y <- sort(x, decreasing = TRUE)
     }
-    res <- list(x = NX, y = y)
+    res <- list(x = NX, p = y)
     class(res) <- "predict.adapt"
     #attr(res,  "call")  <-  sys.call()
     res
@@ -1307,14 +1338,13 @@ predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length
 #' @description Give the adaptive survival function or quantile function
 #'
 #' @param object output  object of the function hill.
-#' @param pgrid used if type = "quantile", a vector of probabilities.
-#' @param xgrid used if type = "survival", a vector of values.
+#' @param newdata optionally, a vector with which to predict. If omitted, the original data points are used.
 #' @param type either "quantile" or "survival".
 #' @param threshold.rank the rank value for the hill output of the threshold, with default value 0.
 #' @param threshold the value of threshold, with default value 0.
 #' @param ... further arguments passed to or from other methods.
 #'
-#' @details If type = "quantile", \eqn{pgrid} must be between 0 and 1. If type = "survival", \eqn{xgrid} must be in the domain of the data from the \code{hill} function.
+#' @details If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the \code{hill} function.
 #'
 #' @return The function provide the quantile assiociated to the adaptive model for the probability grid (transformed to -log(1-p) in the output) if type = "quantile". And the survival function assiociated to the adaptive model for the quantile grid if type = "survival".
 #' @export
@@ -1329,7 +1359,7 @@ predict.hill.adapt <- function(object, pgrid = 1:(length(object$Xsort)-1)/length
 #' #example for a fixed rank value of threshold
 #' predict(hh, threshold.rank = 30)
 #'
-predict.hill <- function(object, pgrid = 1:(length(object$xsort)-1)/length(object$xsort), xgrid = object$xsort, type = "quantile", threshold.rank = 0, threshold = 0, ...){
+predict.hill <- function(object, newdata = NULL, type = "quantile", threshold.rank = 0, threshold = 0, ...){
   # Input: object is the output of the function hill
   # threshold.rank is the rank we use as a threshold
   # type is either quantile to estimate the quantiles or survival to estimate the survival function
@@ -1353,13 +1383,17 @@ predict.hill <- function(object, pgrid = 1:(length(object$xsort)-1)/length(objec
   }
   if(type == "quantile"){
     p0 <- wecdf(Xsort, tau, word)
+    pgrid <- newdata
+    if(is.null(pgrid)){pgrid <- 1:(length(object$xsort)-1)/length(object$xsort)}
     #pgrid <- sort(c(p0, pgrid))
     x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
     x2 <- tau*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
     y <- c(x1, x2)
-    return(list(pgrid = pgrid, y = y[!is.na(y)]))
+    return(list(p = pgrid, y = y[!is.na(y)]))
   }
   if(type == "survival"){
+    xgrid <- newdata
+    if(is.null(xgrid)){xgrid <- object$xsort}
     NX <- sort(unique(c(tau, xgrid)))
     proGrid <- wecdf(Xsort, NX, word)
     x1 <- 1-proGrid[which(NX<= tau)]
@@ -1378,21 +1412,18 @@ predict.hill <- function(object, pgrid = 1:(length(object$xsort)-1)/length(objec
 #' @description  Give the adaptive survival function or quantile function of a time serie
 #'
 #' @param object output object of the function hill.ts.
-#' @param X a vector of the observed values, same as the function hill.ts.
-#' @param t a vector of time covariates which should have the same length as X, same as the function hill.ts.
-#' @param pgrid used if type = "quantile", a vector of probabilities.
-#' @param xgrid used if type = "survival", a vector of values.
+#' @param newdata optionally, a vector with which to predict. If omitted, the original data points are used.
 #' @param type either "quantile" or "survival".
 #' @param ... further arguments passed to or from other methods.
 #'
-#' @details If type = "quantile", \eqn{pgrid} must be between 0 and 1. If type = "survival", \eqn{xgrid} must be in the domain of the data from the function \code{hill.ts}.
+#' @details If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the function \code{hill.ts}.
 #'
 #' @return
-#'   \item{pgrid}{the input vector of probabilities.}
-#'   \item{xgrid}{the input vector of values.}
+#'   \item{p}{the input vector of probabilities.}
+#'   \item{x}{the input vector of values.}
 #'   \item{Tgrid}{Tgrid output of the function hill.ts.}
-#'   \item{quantiles}{the quantiles assiociated to pgrid.}
-#'   \item{surv}{the survival function assiociated to xgrid.}
+#'   \item{quantiles}{the estimted quantiles assiociated to newdata.}
+#'   \item{survival}{the estimated survival function assiociated to newdata.}
 #'
 #' @seealso \code{\link{hill.ts}}
 #'
@@ -1424,56 +1455,60 @@ predict.hill <- function(object, pgrid = 1:(length(object$xsort)-1)/length(objec
 #'   hillTs <- hill.ts(Data, t, Tgrid, h = h.cv, TruncGauss.kernel, kpar = c(sigma = 1),
 #'            CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
 #'   p <- c(0.999)
-#'   pred.quantile.ts <- predict(hillTs, Data, t, pgrid = p, type = "quantile")
+#'   pred.quantile.ts <- predict(hillTs, newdata = p, type = "quantile")
 #'   true.quantile <- NULL
 #'   for(i in 1:n){
 #'      true.quantile[i] <- qparetomix(p, a = 1/Theta[i], b = 1/Theta[i]+5, c = 0.75)
 #'    }
-#'   plot(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)),
-#'        ylim = c(0, max(log(as.numeric(pred.quantile.ts$quantiles)))), ylab = "log(0.999-quantiles)")
+#'   plot(Tgrid, log(as.numeric(pred.quantile.ts$y)),
+#'        ylim = c(0, max(log(as.numeric(pred.quantile.ts$y)))), ylab = "log(0.999-quantiles)")
 #'   lines(t, log(true.quantile), col = "red")
 #'   lines(t, log(Data), col = "blue")
 #'
 #'
 #'   #comparison with other fixed bandwidths
 #'
-#'   plot(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)),
-#'        ylim = c(0, max(log(as.numeric(pred.quantile.ts$quantiles)))), ylab = "log(0.999-quantiles)")
+#'   plot(Tgrid, log(as.numeric(pred.quantile.ts$y)),
+#'        ylim = c(0, max(log(as.numeric(pred.quantile.ts$y)))), ylab = "log(0.999-quantiles)")
 #'   lines(t, log(true.quantile), col = "red")
 #'
 #'   hillTs <- hill.ts(Data, t, Tgrid, h = 0.1, TruncGauss.kernel, kpar = c(sigma = 1),
 #'                     CritVal = 3.6, gridlen = 100,initprop = 1/10, r1 = 1/4, r2 = 1/20)
-#'   pred.quantile.ts <- predict(hillTs, Data, t, p, type = "quantile")
-#'   lines(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)), col = "green")
+#'   pred.quantile.ts <- predict(hillTs, p, type = "quantile")
+#'   lines(Tgrid, log(as.numeric(pred.quantile.ts$y)), col = "green")
 #'
 #'
 #'   hillTs <- hill.ts(Data, t, Tgrid, h = 0.3, TruncGauss.kernel, kpar = c(sigma = 1),
 #'                CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
-#'   pred.quantile.ts <- predict(hillTs, Data, t, p, type = "quantile")
-#'   lines(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)), col = "blue")
+#'   pred.quantile.ts <- predict(hillTs, p, type = "quantile")
+#'   lines(Tgrid, log(as.numeric(pred.quantile.ts$y)), col = "blue")
 #'
 #'
 #'   hillTs <- hill.ts(Data, t, Tgrid, h = 0.04, TruncGauss.kernel, kpar = c(sigma = 1),
 #'              CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
-#'   pred.quantile.ts <- predict(hillTs, Data,t ,p, type = "quantile")
-#'   lines(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)), col = "magenta")
+#'   pred.quantile.ts <- predict(hillTs ,p, type = "quantile")
+#'   lines(Tgrid, log(as.numeric(pred.quantile.ts$y)), col = "magenta")
 #' }
 #'
 #'
 #'
-predict.hill.ts <- function(object, X, t, pgrid = 1:(length(X)-1)/length(X), xgrid = X, type = "quantile", ...){
+predict.hill.ts <- function(object, newdata = NULL, type = "quantile", ...){
   # By Kevin Jaunatre 2015
   # Input : X is a vector of data
   # hill.ts is the output of the function hill.ts
   # grid is a probabilities grid if type = "quantile" or a quantile grid if type = "survival"
   # type is either quantile to estimate the quantiles or survival to estimate the survival function
   # Output : list with grid and the survival or quantile function assiociated for each t
+  X <- object$X
+  t <- object$t
   if(type == "quantile"){
     n <- length(X)
     Theta <- object$Theta
     tau <- object$threshold
     Tgrid <- object$Tgrid
     kernel <- object$kernel
+    pgrid <- newdata
+    if(is.null(pgrid)){pgrid <- 1:(length(X)-1)/length(X)}
     if(length(object$h) == 1){
       h <- rep(object$h, length(Tgrid))
     }else{h <- object$h}
@@ -1510,7 +1545,7 @@ predict.hill.ts <- function(object, X, t, pgrid = 1:(length(X)-1)/length(X), xgr
         y <- cbind(y, x1)
       }
     }
-    return(list(pgrid = pgrid, Tgrid = Tgrid, quantiles = y))
+    return(list(p = pgrid, Tgrid = Tgrid, y = y))
   }
   if(type == "survival"){
     n <- length(X)
@@ -1518,6 +1553,8 @@ predict.hill.ts <- function(object, X, t, pgrid = 1:(length(X)-1)/length(X), xgr
     Theta <- object$Theta
     Tgrid <- object$Tgrid
     kernel <- object$kernel
+    xgrid <- newdata
+    if(is.null(xgrid)){xgrid <- X}
     if(length(object$h) == 1){
       h <- rep(object$h, length(t))
     }else{h <- object$h}
@@ -1558,7 +1595,7 @@ predict.hill.ts <- function(object, X, t, pgrid = 1:(length(X)-1)/length(X), xgr
         y <- cbind(y, sort(x, decreasing = TRUE))
       }
     }
-    return(list(xgrid = sort(xgrid), Tgrid = Tgrid, surv = y))
+    return(list(x = sort(xgrid), Tgrid = Tgrid, p = y))
   }else{cat("please choose a type between quantile and survival")}
 }#end of the function predict.hill.ts
 
@@ -1602,7 +1639,7 @@ plot.hill <- function(x, xaxis = "ranks", ...){
 
 #' Computation of the critical value in the hill.adapt function
 #'
-#' @description For a given kernel function, compute the critical value (CritVal) of the test statistic in the hill.adapt function.
+#' @description For a given kernel function, compute the critical value (CritVal) of the test statistic in the hill.adapt function by Monte-Carlo simulations.
 #'
 #' @param NMC the number of Monte-Carlo simulations.
 #' @param n the sample size.
@@ -1666,9 +1703,10 @@ CriticalValue <- function(NMC, n, kernel = TruncGauss.kernel,kpar = NULL, prob =
   TS <- sapply(Nmc,  MCfunction)
   p <- 1:NMC/NMC
   if(plot == TRUE){
-    plot(sort(TS), p, type = "l", xlab = "TS", ylab = "Empirical distribution function")
-    for(i in 1:length(prob)){abline(v = wquantile(TS, prob[i]), col = i)}
-    legend("topleft",  paste("p = ", prob), col = 1:length(prob), pch = "-")
+    plot(sort(TS), p, type = "l", xlab = "Test Statistic", ylab = "Empirical distribution function")
+    for(i in 1:length(prob)){abline(h = prob[i], col = i,lty=2)}
+    for(i in 1:length(prob)){abline(v = wquantile(TS, prob[i]), col = i,lty=2)}
+    #legend("topleft",  paste("p = ", prob), col = 1:length(prob), pch = "-")
   }
   return(wquantile(TS, prob))
 }#end of CriticalValue
@@ -1720,7 +1758,7 @@ bootCI <- function(X, weights = rep(1, length(X)), probs = 1:(length(X)-1)/lengt
       xb <- X[ind]
       wb <- weights[ind]
       hm <- hill.adapt(xb, wb, initprop = initprop, gridlen = gridlen, r1 = r1,  r2 = r2,  CritVal = CritVal)
-      pred[, b] <- as.numeric(predict(hm, pgrid = probs, type = "quantile")$y)
+      pred[, b] <- as.numeric(predict(hm, newdata = probs, type = "quantile")$y)
     }
     quantInf <- NULL
     quantSup <- NULL
@@ -1729,8 +1767,8 @@ bootCI <- function(X, weights = rep(1, length(X)), probs = 1:(length(X)-1)/lengt
       quantSup[j] <- quantile(pred[j, ], 1-alpha/2)
     }
     if(plot == T){
-      pred.true <- predict(hx, pgrid = probs, type = "quantile")
-      plot(-log(1-pred.true$pgrid), log(pred.true$y), type = "l", xlab = "-log(1-p)", ylab = "log(quantiles)")
+      pred.true <- predict(hx, newdata = probs, type = "quantile")
+      plot(-log(1-pred.true$p), log(pred.true$y), type = "l", xlab = "-log(1-p)", ylab = "log(quantiles)")
       lines(-log(1-probs), log(quantInf), col = "green")
       lines(-log(1-probs), log(quantSup), col = "green")
     }
@@ -1742,7 +1780,7 @@ bootCI <- function(X, weights = rep(1, length(X)), probs = 1:(length(X)-1)/lengt
       xb <- X[ind]
       wb <- weights[ind]
       hm <- hill.adapt(xb, wb, initprop = initprop, gridlen = gridlen, r1 = r1,  r2 = r2,  CritVal = CritVal)
-      pred[, b] <- as.numeric(predict(hm, xgrid = xgrid, type = "survival")$y)
+      pred[, b] <- as.numeric(predict(hm, newdata = xgrid, type = "survival")$p)
     }
     survInf <- NULL
     survSup <- NULL
@@ -1751,8 +1789,8 @@ bootCI <- function(X, weights = rep(1, length(X)), probs = 1:(length(X)-1)/lengt
       survSup[j] <- quantile(pred[j, ], 1-alpha/2)
     }
     if(plot == T){
-      pred.true <- predict(hx, xgrid = xgrid, type = "survival")
-      plot(log(pred.true$x), pred.true$y, type = "l", xlab = "log(x)", ylab = "Survival probability")
+      pred.true <- predict(hx, newdata = xgrid, type = "survival")
+      plot(log(pred.true$x), pred.true$p, type = "l", xlab = "log(x)", ylab = "Survival probability")
       lines(log(xgrid), survInf, col = "green")
       lines(log(xgrid), survSup, col = "green")
     }
@@ -1852,7 +1890,7 @@ bootCI.ts <- function(X, t, Tgrid, h, kernel =  TruncGauss.kernel, kpar = NULL, 
         xb <- x[ind]
         wb <- weights[ind]
         hm <- hill.adapt(xb, wb, initprop = initprop, gridlen = gridlen, r1 = r1,  r2 = r2,  CritVal = CritVal)
-        Qpred[j, b] <- as.numeric(predict(hm, pgrid = prob, type = "quantile")$y)
+        Qpred[j, b] <- as.numeric(predict(hm, newdata = prob, type = "quantile")$y)
       }
     }
     quantInf <- NULL
@@ -1866,8 +1904,8 @@ bootCI.ts <- function(X, t, Tgrid, h, kernel =  TruncGauss.kernel, kpar = NULL, 
       #quantEmpSup[j] <- quantile(Qemp[j, ], 1-alpha)
     }
     if(plot == T){
-      pred.true <- predict(hh, X, t, pgrid = prob, type = "quantile")
-      plot(Tgrid, log(as.numeric(pred.true$quantiles)), type = "l", ylim = c(0, round(max(log(quantSup)))), xlab = "Tgrid", ylab = "log(quantiles)")
+      pred.true <- predict(hh, newdata = prob, type = "quantile")
+      plot(Tgrid, log(as.numeric(pred.true$y)), type = "l", ylim = c(0, round(max(log(quantSup)))), xlab = "Tgrid", ylab = "log(quantiles)")
       lines(Tgrid, log(quantInf), col = "green")
       lines(Tgrid, log(quantSup), col = "green")
       #lines(-log(1-pg), log(quantEmpInf), col = "blue", lty = 2)
@@ -1890,7 +1928,7 @@ bootCI.ts <- function(X, t, Tgrid, h, kernel =  TruncGauss.kernel, kpar = NULL, 
         xb <- x[ind]
         wb <- weights[ind]
         hm <- hill.adapt(xb, wb, initprop = initprop, gridlen = gridlen, r1 = r1,  r2 = r2,  CritVal = CritVal)
-        Ppred[j, b] <- as.numeric(predict(hm, xgrid = threshold, type = "survival")$y)
+        Ppred[j, b] <- as.numeric(predict(hm, newdata = threshold, type = "survival")$p)
       }
    }
     SurvInf <- NULL
@@ -1904,8 +1942,8 @@ bootCI.ts <- function(X, t, Tgrid, h, kernel =  TruncGauss.kernel, kpar = NULL, 
       #quantEmpSup[j] <- quantile(Qemp[j, ], 1-alpha)
     }
     if(plot == T){
-      pred.true <- predict(hh, X, t, xgrid = threshold, type = "survival")
-      plot(Tgrid, as.numeric(pred.true$surv), type = "l", ylim = c(min(SurvInf)-0.1, max(SurvSup)+0.1), xlab = "Tgrid", ylab = "Survival probability")
+      pred.true <- predict(hh, newdata = threshold, type = "survival")
+      plot(Tgrid, as.numeric(pred.true$p), type = "l", ylim = c(min(SurvInf)-0.1, max(SurvSup)+0.1), xlab = "Tgrid", ylab = "Survival probability")
       lines(Tgrid, SurvInf, col = "green")
       lines(Tgrid, SurvSup, col = "green")
       #lines(-log(1-pg), log(quantEmpInf), col = "blue", lty = 2)

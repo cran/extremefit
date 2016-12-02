@@ -11,7 +11,7 @@ High-frequency noninvasive valvometry data
 \format{
   A list of 2 elements.
   \describe{
-    \item{\code{$data : a data frame with 18000 observations for 3 variables}}{\describe{
+    \item{\code{$data : a data frame with 54000 observations for 3 variables}}{\describe{
     \item{\code{time}}{Time of measurement (in hours).}
     \item{\code{opening}}{opening amplitude between the two shells (in mm).}
     \item{\code{velocity}}{a numeric vector (in mm/s). Negative values correspond to the opening velocity of the shells and positive values to the closing velocity of the shells.}}}
@@ -32,41 +32,45 @@ website : http://molluscan-eye.epoc.u-bordeaux1.fr/
 \examples{
 
 data("dataOyster")
-Velocity<-dataOyster$data[,3]
-time<-dataOyster$data[,1]
-plot(time,Velocity,type="l",xlab="time (hour)",ylab="Velocity (mm/s)")
+Velocity <- dataOyster$data[, 3]
+time <- dataOyster$data[, 1]
+plot(time, Velocity, type = "l", xlab = "time (hour)",
+      ylab = "Velocity (mm/s)")
 
-Tgrid<-seq(0,24,0.05) 
+Tgrid <- seq(0, 24, 0.05) 
 #Grid with positive velocity
-new.Tgrid<-dataOyster$Tgrid
+new.Tgrid <- dataOyster$Tgrid
 
-X<-Velocity+(-min(Velocity)) #We adjust the data to be positive
+X <- Velocity + (-min(Velocity)) #We shift the data to be positive
 
 \dontrun{ #For computing time purpose
 #We find the h by minimizing the cross validation function 
 
-hgrid<-bandwidth.grid(0.05,0.5,50,type="geometric")
+hgrid <- bandwidth.grid(0.05, 0.5, 50, type = "geometric")
 
 
-#H<-bandwidth.CV(X,time,new.Tgrid,hgrid,
-#                  TruncGauss.kernel,kpar=c(sigma=1),pcv=0.99,CritVal=3.6,plot=TRUE)
-#hcv<-H$h.cv
+#H <- bandwidth.CV(X, time, new.Tgrid, hgrid,
+#                 TruncGauss.kernel, kpar = c(sigma = 1),
+#                 pcv = 0.99, CritVal = 3.4, plot = TRUE)
+#hcv <- H$h.cv
 
 hcv <- 0.2981812
 #we use our method with the h found previously
-TS.Oyster<-hill.ts(X,t=time,new.Tgrid,h=hcv,TruncGauss.kernel,kpar=c(sigma=1),
-          CritVal=3.6,gridlen=100,initprop = 1/10, r1 = 1/4, r2 = 1/20)
+TS.Oyster <- hill.ts(X, t = time, new.Tgrid, h = hcv, 
+                   TruncGauss.kernel, kpar = c(sigma = 1),
+                   CritVal = 3.4)
           
-plot(time,Velocity,type="l",ylim=c(-0.6,1),
-    main="Extreme quantiles estimator",
-    xlab="Time (hour)",ylab="Velocity (mm/s)")
-pgrid<-c(0.999)
-pred.quant.Oyster<-predict(TS.Oyster,X,t=time,pgrid=pgrid,type="quantile")
+plot(time, Velocity, type = "l", ylim = c(-0.6, 1),
+    main = "Extreme quantiles estimator",
+    xlab = "Time (hour)", ylab = "Velocity (mm/s)")
+pgrid <- c(0.999)
+pred.quant.Oyster <- predict(TS.Oyster, newdata = pgrid, type = "quantile")
 
-quant0.999<-rep(0,length(Tgrid))
-  quant0.999[match(new.Tgrid,Tgrid)]<-as.numeric(pred.quant.Oyster$quantile)-
-  (-min(Velocity))
-lines(Tgrid,quant0.999,col="magenta")   
+quant0.999 <- rep(0, length(Tgrid))
+quant0.999[match(new.Tgrid, Tgrid)] <- 
+          as.numeric(pred.quant.Oyster$y)-
+          (-min(Velocity))
+lines(Tgrid, quant0.999, col = "magenta")   
 
 
 }

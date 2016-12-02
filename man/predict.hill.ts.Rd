@@ -4,36 +4,29 @@
 \alias{predict.hill.ts}
 \title{Predict the adaptive Survival or Quantile function for a time serie}
 \usage{
-\method{predict}{hill.ts}(object, X, t, pgrid = 1:(length(X) - 1)/length(X),
-  xgrid = X, type = "quantile", ...)
+\method{predict}{hill.ts}(object, newdata = NULL, type = "quantile", ...)
 }
 \arguments{
 \item{object}{output object of the function hill.ts.}
 
-\item{X}{a vector of the observed values, same as the function hill.ts.}
-
-\item{t}{a vector of time covariates which should have the same length as X, same as the function hill.ts.}
-
-\item{pgrid}{used if type = "quantile", a vector of probabilities.}
-
-\item{xgrid}{used if type = "survival", a vector of values.}
+\item{newdata}{optionally, a vector with which to predict. If omitted, the original data points are used.}
 
 \item{type}{either "quantile" or "survival".}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-\item{pgrid}{the input vector of probabilities.}
-  \item{xgrid}{the input vector of values.}
+\item{p}{the input vector of probabilities.}
+  \item{x}{the input vector of values.}
   \item{Tgrid}{Tgrid output of the function hill.ts.}
-  \item{quantiles}{the quantiles assiociated to pgrid.}
-  \item{surv}{the survival function assiociated to xgrid.}
+  \item{quantiles}{the estimted quantiles assiociated to newdata.}
+  \item{survival}{the estimated survival function assiociated to newdata.}
 }
 \description{
 Give the adaptive survival function or quantile function of a time serie
 }
 \details{
-If type = "quantile", \eqn{pgrid} must be between 0 and 1. If type = "survival", \eqn{xgrid} must be in the domain of the data from the function \code{hill.ts}.
+If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the function \code{hill.ts}.
 }
 \examples{
 #Generate a pareto mixture sample of size n with a time varying parameter
@@ -61,39 +54,39 @@ for(i in 1:n){
   hillTs <- hill.ts(Data, t, Tgrid, h = h.cv, TruncGauss.kernel, kpar = c(sigma = 1),
            CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
   p <- c(0.999)
-  pred.quantile.ts <- predict(hillTs, Data, t, pgrid = p, type = "quantile")
+  pred.quantile.ts <- predict(hillTs, newdata = p, type = "quantile")
   true.quantile <- NULL
   for(i in 1:n){
      true.quantile[i] <- qparetomix(p, a = 1/Theta[i], b = 1/Theta[i]+5, c = 0.75)
    }
-  plot(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)),
-       ylim = c(0, max(log(as.numeric(pred.quantile.ts$quantiles)))), ylab = "log(0.999-quantiles)")
+  plot(Tgrid, log(as.numeric(pred.quantile.ts$y)),
+       ylim = c(0, max(log(as.numeric(pred.quantile.ts$y)))), ylab = "log(0.999-quantiles)")
   lines(t, log(true.quantile), col = "red")
   lines(t, log(Data), col = "blue")
 
 
   #comparison with other fixed bandwidths
 
-  plot(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)),
-       ylim = c(0, max(log(as.numeric(pred.quantile.ts$quantiles)))), ylab = "log(0.999-quantiles)")
+  plot(Tgrid, log(as.numeric(pred.quantile.ts$y)),
+       ylim = c(0, max(log(as.numeric(pred.quantile.ts$y)))), ylab = "log(0.999-quantiles)")
   lines(t, log(true.quantile), col = "red")
 
   hillTs <- hill.ts(Data, t, Tgrid, h = 0.1, TruncGauss.kernel, kpar = c(sigma = 1),
                     CritVal = 3.6, gridlen = 100,initprop = 1/10, r1 = 1/4, r2 = 1/20)
-  pred.quantile.ts <- predict(hillTs, Data, t, p, type = "quantile")
-  lines(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)), col = "green")
+  pred.quantile.ts <- predict(hillTs, p, type = "quantile")
+  lines(Tgrid, log(as.numeric(pred.quantile.ts$y)), col = "green")
 
 
   hillTs <- hill.ts(Data, t, Tgrid, h = 0.3, TruncGauss.kernel, kpar = c(sigma = 1),
                CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
-  pred.quantile.ts <- predict(hillTs, Data, t, p, type = "quantile")
-  lines(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)), col = "blue")
+  pred.quantile.ts <- predict(hillTs, p, type = "quantile")
+  lines(Tgrid, log(as.numeric(pred.quantile.ts$y)), col = "blue")
 
 
   hillTs <- hill.ts(Data, t, Tgrid, h = 0.04, TruncGauss.kernel, kpar = c(sigma = 1),
              CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
-  pred.quantile.ts <- predict(hillTs, Data,t ,p, type = "quantile")
-  lines(Tgrid, log(as.numeric(pred.quantile.ts$quantiles)), col = "magenta")
+  pred.quantile.ts <- predict(hillTs ,p, type = "quantile")
+  lines(Tgrid, log(as.numeric(pred.quantile.ts$y)), col = "magenta")
 }
 
 

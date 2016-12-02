@@ -13,78 +13,18 @@
 }}
 
 \examples{
+
+library(extremefit)
 data("dataWind")
+attach(dataWind)
 
-
-
-
-\dontrun{
-
-
-Xwind<-dataWind$Speed
-# As the speed is in meter/sec, we transform the speed into a more common scale km/h
-
-Xwind<-Xwind*3600/1000
-
-n<-length(Xwind)
-twind<-1:n
-
-plot(twind,Xwind)
-
-
-
-#Choice of a period : 1990 to 2000 for example
-
-indices<-which((dataWind$Year>=1990)&(dataWind$Year<=2000))
-X<-Xwind[indices]
-t<-twind[indices]
-
-#we choose a bandwidth equal to 60 (two months of data)
-
-h<-60
-seqTgrid<-seq(1,length(t),by=10)
-Tgrid<-t[seqTgrid]
-TS.W<-hill.ts(X,t=t,Tgrid,h=h,Gaussian.kernel,
-               CritVal=2.7,gridlen=100,initprop = 1/4, r1 = 1/4, r2 = 1/20)
-
-pgrid<-c(0.95,0.99) # can be changed to a vector of
-# probabilities without affecting the computing time
-pred.quant.W<-predict(TS.W,X,t=t,pgrid=pgrid,type="quantile")
-
-
-plot(t,X,type="l",ylim=c(0,100))
-
-quant<-as.numeric(pred.quant.W$quantile[1,])
-lines(Tgrid,quant,col="red")
-
-quant<-as.numeric(pred.quant.W$quantile[2,])
-lines(Tgrid,quant,col="blue")
-
-
-legend("bottomright",c("0.95-quantile","0.99-quantile"),col=c("red","blue"),pch="-")
-
-# with the time on the axis
-
-# date<-paste(dataWind$Year,"-",dataWind$Month,"-",dataWind$Day)
-# dateWind<-as.Date(date,format="%Y - %m - %d")
-
-
-# plot(dateWind,Xwind)
-
-# Date<-dateWind[indices]
-
-# dateGRid<-Date[seqTgrid]
-
-# plot(Date,X,type="l",ylim=c(0,100))
-
-# quant<-as.numeric(pred.quant.W$quantile[1,])
-# lines(dateGRid,quant,col="red")
-
-# quant<-as.numeric(pred.quant.W$quantile[2,])
-# lines(dateGRid,quant,col="blue")
-
-
-# legend("bottomright",c("0.95-quantile","0.99-quantile"),col=c("red","blue"),pch="-")
+pred <- NULL
+for(m in 1:12){
+  indices <- which(Month == m)
+  X <- Speed[indices]*60*60/1000
+  H <- hill.adapt(X)
+  pred[m] <- predict(H, newdata = 100, type = "survival")$p
 }
+plot(pred, ylab = "Estimated survival probability", xlab = "Month")
 
 }

@@ -27,7 +27,7 @@ CriticalValue(NMC, n, kernel = TruncGauss.kernel, kpar = NULL,
 For the type 1 errors \eqn{prob}, this function returns the critical values.
 }
 \description{
-For a given kernel function, compute the critical value (CritVal) of the test statistic in the hill.adapt function.
+For a given kernel function, compute the critical value (CritVal) of the test statistic in the hill.adapt function by Monte-Carlo simulations.
 }
 \examples{
 n <- 1000

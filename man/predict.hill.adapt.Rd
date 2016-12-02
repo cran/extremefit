@@ -4,15 +4,12 @@
 \alias{predict.hill.adapt}
 \title{Predict the adaptive Survival or Quantile function}
 \usage{
-\method{predict}{hill.adapt}(object, pgrid = 1:(length(object$Xsort) -
-  1)/length(object$Xsort), xgrid = object$Xsort, type = "quantile", ...)
+\method{predict}{hill.adapt}(object, newdata = NULL, type = "quantile", ...)
 }
 \arguments{
 \item{object}{output object of the function hill.adapt.}
 
-\item{pgrid}{used if type = "quantile", a vector of probabilities.}
-
-\item{xgrid}{used if type = "survival", a vector of values.}
+\item{newdata}{optionally, a vector with which to predict. If omitted, the original data points are used.}
 
 \item{type}{either "quantile" or "survival".}
 
@@ -25,7 +22,7 @@ The function provide the quantile assiociated to the adaptive model for the prob
 Give the adaptive survival function or quantile function
 }
 \details{
-If type = "quantile", \eqn{pgrid} must be between 0 and 1. If type = "survival", \eqn{xgrid} must be in the domain of the data from the \code{hill.adapt} function.
+If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the \code{hill.adapt} function.
 }
 \examples{
 x <- rparetoCP(1000)
@@ -33,17 +30,17 @@ x <- rparetoCP(1000)
 HH <- hill.adapt(x, weights=rep(1, length(x)), initprop = 0.1,
                gridlen = 100 , r1 = 0.25, r2 = 0.05, CritVal=10)
 
-pgrid <- probgrid(p1 = 0.01, p2 = 0.999, length = 100)
-pred.quantile <- predict(HH, pgrid = pgrid, type = "quantile")#quantile function
-xgrid <- seq(0, 50, 0.1)
-pred.survival <- predict(HH, xgrid = xgrid, type = "survival")#survival function
+newdata <- probgrid(p1 = 0.01, p2 = 0.999, length = 100)
+pred.quantile <- predict(HH, newdata, type = "quantile")
+newdata <- seq(0, 50, 0.1)
+pred.survival <- predict(HH, newdata, type = "survival")#survival function
 
 #compare the theorical quantile and the adaptive one.
-predict(HH, pgrid = 0.9999, type = "quantile")
+predict(HH, 0.9999, type = "quantile")
 qparetoCP(0.9999)
 
 #compare the theorical probability and the adaptive one assiociated to a quantile.
-predict(HH, xgrid = 20, type = "survival")
+predict(HH, 20, type = "survival")
 1 - pparetoCP(20)
 
 }

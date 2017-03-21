@@ -26,16 +26,16 @@ new.Tgrid <- LoadCurve$Tgrid
 \dontrun{ #For computing time purpose
 # Choice of the bandwidth by cross validation. 
 # We choose the truncated Gaussian kernel and the critical value 
-# of the goodness-of-fit test 3.6. 
+# of the goodness-of-fit test 3.4. 
 # As the computing time is high, we give the value of the bandwidth.
 
 #hgrid <- bandwidth.grid(0.8, 5, 60)
 #hcv<-bandwidth.CV(X=X, t=days, new.Tgrid, hgrid, pcv = 0.99,
-#                 kernel = TruncGauss.kernel, CritVal = 3.6, plot = FALSE)
+#                 kernel = TruncGauss.kernel, CritVal = 3.4, plot = FALSE)
 #h.cv <- hcv$h.cv
 
-h.cv <- 3.041852
-HH<-hill.ts(X, days, new.Tgrid, h=h.cv, kernel = TruncGauss.kernel, CritVal = 3.6)
+h.cv <- 3.444261
+HH<-hill.ts(X, days, new.Tgrid, h=h.cv, kernel = TruncGauss.kernel, CritVal = 3.4)
 
 Quant<-rep(NA,length(Tgrid))
 Quant[match(new.Tgrid, Tgrid)]<-as.numeric(predict(HH, 

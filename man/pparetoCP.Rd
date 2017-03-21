@@ -15,13 +15,13 @@ rparetoCP(n, a0 = 1, a1 = 2, x0 = 1, x1 = 6)
 \arguments{
 \item{x}{a vector of quantiles.}
 
-\item{a0}{the shape parameter of the Pareto distribution before \eqn{x1}.}
+\item{a0}{a vector of shape parameter of the Pareto distribution before \eqn{x1}.}
 
-\item{a1}{the shape parameter of the Pareto distribution after \eqn{x1}.}
+\item{a1}{a vector of shape parameter of the Pareto distribution after \eqn{x1}.}
 
-\item{x0}{the scale parameter of the function.}
+\item{x0}{a vector of scale parameter of the function.}
 
-\item{x1}{the change point value.}
+\item{x1}{a vector of change point value.}
 
 \item{p}{a vector of probabilities.}
 

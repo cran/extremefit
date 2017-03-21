@@ -1403,7 +1403,7 @@ predict.hill <- function(object, newdata = NULL, type = "quantile", threshold.ra
       y <- sort(y[-which(NX == tau)], decreasing = TRUE)
       NX <- NX[-which(NX == tau)]
     }
-    return(list(x = NX, y = y))
+    return(list(x = NX, p = y))
   }else{cat("please choose a type between quantile and survival")}
 }#end of function predict.hill
 
@@ -2248,10 +2248,10 @@ rparetomix <- function(n, a = 1, b = 2, c = 0.75, precision = 10^(-10)){
 #' @param x a vector of quantiles.
 #' @param p a vector of probabilities.
 #' @param n a number of observations. If length(n) > 1, the length is taken to be the number required.
-#' @param a0 the shape parameter of the Pareto distribution before \eqn{x1}.
-#' @param a1 the shape parameter of the Pareto distribution after \eqn{x1}.
-#' @param x0 the scale parameter of the function.
-#' @param x1 the change point value.
+#' @param a0 a vector of shape parameter of the Pareto distribution before \eqn{x1}.
+#' @param a1 a vector of shape parameter of the Pareto distribution after \eqn{x1}.
+#' @param x0 a vector of scale parameter of the function.
+#' @param x1 a vector of change point value.
 #'
 #' @details If not specified, \eqn{a0, a1, x0} and \eqn{x1} are taking respectively the values \eqn{1, 2, 1} and \eqn{6}
 #'
@@ -2287,7 +2287,7 @@ pparetoCP <- function(x, a0 = 1, a1 = 2, x0 = 1, x1 = 6){
   x <- pmax(x, x0)
   x <- x/x0
   x1 <- x1/x0
-  ifelse(x <= x1, 1- x^(-a0) , 1- x^(-a1)*x1^(-a0+a1) )
+  (x <= x1)*(1- x^(-a0))+ (x > x1)*(1- x^(-a1)*x1^(-a0+a1) )
 }
 
 
@@ -2295,15 +2295,15 @@ pparetoCP <- function(x, a0 = 1, a1 = 2, x0 = 1, x1 = 6){
 qparetoCP <- function(p, a0 = 1, a1 = 2, x0 = 1, x1 = 6){
   p <- pmin(1, pmax(0, p))
   y1  <-  1-(x1/x0)^(-a0)
-  x0*ifelse(p <= y1,  (1-p)^(-1/a0) ,  (1-p)^(-1/a1) * (x1/x0)^(1-a0/a1)   )
+  x0*((p <= y1)* ( (1-p)^(-1/a0) ) + (p > y1)* ((1-p)^(-1/a1) * (x1/x0)^(1-a0/a1)   ))
 }
 
 #' @rdname pparetoCP
 rparetoCP <- function(n, a0 = 1, a1 = 2, x0 = 1, x1 = 6){
-  x <- x <- runif(n)
+  x <- runif(n)
   x <- pmin(1, pmax(0, x))
   y1  <-  1-(x1/x0)^(-a0)
-  x0*ifelse(x <= y1,  (1-x)^(-1/a0) ,  (1-x)^(-1/a1) * (x1/x0)^(1-a0/a1)   )
+  x0*((x <= y1)*  ((1-x)^(-1/a0)) +  (x > y1)* ((1-x)^(-1/a1) * (x1/x0)^(1-a0/a1) )  )
 }
 
 #' The Pareto Distribution
@@ -2316,9 +2316,9 @@ rparetoCP <- function(n, a0 = 1, a1 = 2, x0 = 1, x1 = 6){
 #' @param q a vector of quantiles.
 #' @param p a vector of probabilities.
 #' @param n a number of observations. If length(n) > 1, the length is taken to be the number required.
-#' @param a the shape parameter of the Pareto distribution.
-#' @param loc the location parameter of the Pareto distribution.
-#' @param scale the scale parameter of the Pareto distribution.
+#' @param a a vector of shape parameter of the Pareto distribution.
+#' @param loc a vector of location parameter of the Pareto distribution.
+#' @param scale a vector of scale parameter of the Pareto distribution.
 #'
 #' @details If \eqn{shape}, \eqn{loc} or \eqn{scale} parameters are not specified, the respective default values are \eqn{1}, \eqn{0} and \eqn{1}.
 #'

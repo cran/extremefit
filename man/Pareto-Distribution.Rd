@@ -19,11 +19,11 @@ rpareto(n, a = 1, loc = 0, scale = 1)
 \arguments{
 \item{q}{a vector of quantiles.}
 
-\item{a}{the shape parameter of the Pareto distribution.}
+\item{a}{a vector of shape parameter of the Pareto distribution.}
 
-\item{loc}{the location parameter of the Pareto distribution.}
+\item{loc}{a vector of location parameter of the Pareto distribution.}
 
-\item{scale}{the scale parameter of the Pareto distribution.}
+\item{scale}{a vector of scale parameter of the Pareto distribution.}
 
 \item{x}{a vector of quantiles.}
 

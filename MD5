@@ -1,6 +1,6 @@
-f84058ae9b5258ea9b47fc776a95f7ea *DESCRIPTION
+85e6eae04e8dc8f49d33a0bdc2faf6a7 *DESCRIPTION
 660dac59a91feec83c04d8805438c121 *NAMESPACE
-c489871377e4c154954ab346d56aa825 *R/PackageOxygen.R
+85d6f7da8202f7ad640d0b08fba8e2fb *R/PackageOxygen.R
 ff2a4baa88c685faac6c9a483a6b56bc *data/LoadCurve.rda
 a2da9795173b08fe9c8b8e3151271eb2 *data/dataOyster.rda
 83a94c02027cd01d91fd7a441cb146bd *data/dataWind.rda
@@ -10,8 +10,8 @@ be243935ed2f665f4e7ea600b55cef6a *man/Burr-Distribution.Rd
 61ee2637d0b2d2ee19b03cfd97a824cf *man/CriticalValue.Rd
 abf727d09b94277446897390c5ae6dda *man/Epa.kernel.Rd
 033266fd595989c89480602413bd7cff *man/Gaussian.kernel.Rd
-24eaeccbe1761e4d594beb921ffe5e5e *man/LoadCurve.Rd
-6f13a35cf227de776abc669174aa2d2e *man/Pareto-Distribution.Rd
+4a89e92ad1f8d64b7d017805ea8111cc *man/LoadCurve.Rd
+694dcecb0d6bedad0ec17ceb64944a0a *man/Pareto-Distribution.Rd
 a03df47f75615b5438a74d5485d11546 *man/Pareto-mix.Rd
 4454e76f00fd0bd35169eb2a549dc745 *man/Rectangular.kernel.Rd
 4c937fe837573ca0c8e3df1093761b8c *man/Triang.kernel.Rd
@@ -30,7 +30,7 @@ e375be030d58017626b2e36d3cf9ed1d *man/goftest.hill.ts.Rd
 1388418651125cc7ae2bc44be2c47fe4 *man/hill.ts.Rd
 a338c2ec7090a1a8860a8b2089de46b0 *man/plot.hill.Rd
 57fc9c1238d40e991f5761e61e7773ca *man/plot.hill.adapt.Rd
-290405aef1cf0e68bd5e6473c8395885 *man/pparetoCP.Rd
+072f77712380f5fb4fb5af9a973f357e *man/pparetoCP.Rd
 3d456e747ebcfa2d2052fc5f06b294a0 *man/predict.hill.Rd
 b800ac08620a4dee755603aa71e023c1 *man/predict.hill.adapt.Rd
 e1a610abd685b742f9753e2c43d29c7b *man/predict.hill.ts.Rd

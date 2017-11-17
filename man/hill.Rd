@@ -30,9 +30,6 @@ X <- abs(rcauchy(100))
 weights <- rep(1, length(X))
 wh <- hill(X, w = weights)
 }
-\author{
-Ion Grama
-}
 \references{
 Grama, I. and Spokoiny, V. (2008). Statistics of extremes by oracle estimation. Ann. of Statist., 36, 1619-1648.
 
@@ -40,4 +37,6 @@ Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric a
 
 Hill, B.M. (1975). A simple general approach to inference about the tail of a distribution. Annals of Statistics, 3, 1163-1174.
 }
-
+\author{
+Ion Grama
+}

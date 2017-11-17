@@ -31,4 +31,3 @@ plot(hh, xaxis = "xsort")
 \seealso{
 \code{\link{hill}}
 }
-

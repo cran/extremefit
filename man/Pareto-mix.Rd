@@ -2,8 +2,8 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{Pareto mix}
 \alias{Pareto mix}
-\alias{dparetomix}
 \alias{pparetomix}
+\alias{dparetomix}
 \alias{qparetomix}
 \alias{rparetomix}
 \title{The Pareto mix Distribution}
@@ -77,4 +77,3 @@ x <- rparetomix(n)
 
 
 }
-

@@ -26,4 +26,3 @@ plot(function(x) Rectangular.kernel(x), -2, 2,
 main = " Rectangular kernel ")
 
 }
-

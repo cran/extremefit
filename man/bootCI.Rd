@@ -55,4 +55,3 @@ B <- 200
 \seealso{
 \code{\link{hill.adapt}},\code{\link{CriticalValue}},\code{\link{predict.hill.adapt}}
 }
-

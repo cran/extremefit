@@ -34,4 +34,3 @@ f <- ecdf(X)
 lines(x, f(x), col = "red", type = "s")
 
 }
-

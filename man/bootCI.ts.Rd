@@ -54,6 +54,7 @@ The kernel implemented in this packages are : Biweight kernel, Epanechnikov kern
 
 The executing time of the function can be time consuming if the B parameter or the sample size are high (B=100 and the sample size = 5000 for example) .
 }
+
 \examples{
 theta <- function(t){
    0.5+0.25*sin(2*pi*t)
@@ -90,4 +91,3 @@ h <- 0.1
 \seealso{
 \code{\link{hill.ts}},\code{\link{predict.hill.ts}}, \code{\link{Biweight.kernel}}, \code{\link{Epa.kernel}}, \code{\link{Rectangular.kernel}}, \code{\link{Triang.kernel}}, \code{\link{TruncGauss.kernel}}
 }
-

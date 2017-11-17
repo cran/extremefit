@@ -44,4 +44,3 @@ Burr.dependent <- rburr.dependent(n, 1/Theta, 1, alpha)
 \references{
 Fawcett, D. and Walshaw, D. (2007). Improved estimation for temporally clustered extremes. Environmetrics, 18.2, 173-188.
 }
-

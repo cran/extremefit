@@ -24,4 +24,3 @@ plot(function(x) Biweight.kernel(x),-2, 2,
 main = " Biweight kernel ")
 
 }
-

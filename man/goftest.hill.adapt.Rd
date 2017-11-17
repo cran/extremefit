@@ -44,4 +44,3 @@ Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric a
 \seealso{
 \code{\link{hill.adapt}}, \code{\link{goftest}}
 }
-

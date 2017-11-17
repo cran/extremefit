@@ -24,4 +24,3 @@ plot(function(x) Triang.kernel(x), -2, 2,
 main = " Triangular kernel")
 
 }
-

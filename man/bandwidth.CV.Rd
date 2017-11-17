@@ -63,13 +63,12 @@ hgrid <- bandwidth.grid(0.1, 0.3, 20) #define a grid of bandwidths
 
 
 }
-\author{
-Durrieu, G., Grama, I., Jaunatre, K., Pham, Q. and Tricot, J.- M
-}
 \references{
 Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
 }
 \seealso{
 \code{\link{bandwidth.grid}} , \code{\link{CriticalValue}}
 }
-
+\author{
+Durrieu, G., Grama, I., Jaunatre, K., Pham, Q. and Tricot, J.- M
+}

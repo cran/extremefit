@@ -1306,25 +1306,21 @@ predict.hill.adapt <- function(object, newdata = NULL, type = "quantile",  ...){
     Xsort <- sort(object$Xsort)
     xgrid <- newdata
     if(is.null(xgrid)){xgrid <- object$Xsort}
-    NX <- sort(unique(c(object$Xadapt, xgrid)))
-    proGrid <- wecdf(object$Xsort, NX, object$sortweights)
+    proGrid <- wecdf(object$Xsort, xgrid, object$sortweights)
+    pTau <- wecdf(object$Xsort, object$Xadapt, object$sortweights)
     tau <- object$Xadapt
     Theta <- object$hadapt
+    y <- rep(NA,length(xgrid))
     if(!is.na(Theta)){
-      x1 <- 1-proGrid[which(NX<tau)]
-      x2 <- (1-ppareto(NX[which(NX>= tau)], a = 1/Theta, scale = tau))*(1-proGrid[which(NX == tau)])
-      y <- c(x1, x2)
-      if(length(xgrid[which(xgrid == tau)]) == 0){
-        y <- sort(y[-which(NX == tau)], decreasing = TRUE)
-        NX <- NX[-which(NX == tau)]
-      }
+      y[which(xgrid<tau)] <- 1-proGrid[which(xgrid<tau)]
+      y[which(xgrid>= tau)] <- (1-ppareto(xgrid[which(xgrid>= tau)], a = 1/Theta, scale = tau))*(1-pTau)
     }else{
-      proGrid <- wecdf(Xsort, NX, weights)
+      proGrid <- wecdf(Xsort, xgrid, weights)
       x1 <- 1-proGrid
       x <- c(x1)
-      y <- sort(x, decreasing = TRUE)
+      y <- x
     }
-    res <- list(x = NX, p = y)
+    res <- list(x = xgrid, p = y)
     class(res) <- "predict.adapt"
     #attr(res,  "call")  <-  sys.call()
     res
@@ -1393,17 +1389,16 @@ predict.hill <- function(object, newdata = NULL, type = "quantile", threshold.ra
   }
   if(type == "survival"){
     xgrid <- newdata
-    if(is.null(xgrid)){xgrid <- object$xsort}
-    NX <- sort(unique(c(tau, xgrid)))
-    proGrid <- wecdf(Xsort, NX, word)
-    x1 <- 1-proGrid[which(NX<= tau)]
-    x2 <- (1-ppareto(NX[which(NX>tau)], a = 1/Theta, scale = tau))*(1-proGrid[which(NX == tau)])
-    y <- c(x1, x2)
-    if(length(xgrid[which(xgrid == tau)]) == 0){
-      y <- sort(y[-which(NX == tau)], decreasing = TRUE)
-      NX <- NX[-which(NX == tau)]
+    if (is.null(xgrid)) {
+      xgrid <- object$xsort
     }
-    return(list(x = NX, p = y))
+    proGrid <- wecdf(Xsort, xgrid, word)
+    proTau <- wecdf(Xsort, tau, word)
+    y <- rep(NA,length(xgrid))
+    y[which(xgrid <= tau)] <- 1 - proGrid[which(xgrid <= tau)]
+    y[which(xgrid > tau)] <- (1 - ppareto(xgrid[which(xgrid > tau)], a = 1/Theta,
+                       scale = tau)) * (1 - proTau)
+    return(list(x = xgrid, p = y))
   }else{cat("please choose a type between quantile and survival")}
 }#end of function predict.hill
 
@@ -1561,7 +1556,6 @@ predict.hill.ts <- function(object, newdata = NULL, type = "quantile", ...){
     y <- NULL
     for(i in 1:length(Tgrid)){
       if(!is.na(Theta[i])){
-        NX <- sort(unique(c(tau[i], xgrid)))
         indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
         t.ind <- t[indices]
         tx <- (t.ind-Tgrid[i])/h[i]
@@ -1571,15 +1565,13 @@ predict.hill.ts <- function(object, newdata = NULL, type = "quantile", ...){
           par <- list(tx, object$kpar)
         }
         weights <- do.call(kernel,par)
-        proGrid <- wecdf(X[indices], NX, weights)
-        x1 <- 1-proGrid[which(NX<= tau[i])]
-        x2 <- (1-ppareto(NX[which(NX>tau[i])], a = 1/Theta[i], scale = tau[i]))*(1-proGrid[which(NX == tau[i])])
-        x <- c(x1, x2)
-        if((length(xgrid[which(xgrid == tau[i])]) == 0)){
-          y <- cbind(y, sort(x[-which(NX == tau[i])], decreasing = TRUE))
-        }else{y <- cbind(y, sort(x, decreasing = TRUE))}
+        proGrid <- wecdf(X[indices], xgrid, weights)
+        pTau <- wecdf(X[indices], tau[i], weights)
+        x <- rep(NA,length(xgrid))
+        x[which(xgrid<= tau[i])] <- 1-proGrid[which(xgrid<= tau[i])]
+        x[which(xgrid>tau[i])] <- (1-ppareto(xgrid[which(xgrid>tau[i])], a = 1/Theta[i], scale = tau[i]))*(1-pTau)
+        y <- cbind(y, x)
       }else{
-        NX <- sort(xgrid)
         indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
         t.ind <- t[indices]
         tx <- (t.ind-Tgrid[i])/h[i]
@@ -1589,13 +1581,13 @@ predict.hill.ts <- function(object, newdata = NULL, type = "quantile", ...){
           par <- list(tx, object$kpar)
         }
         weights <- do.call(kernel,par)
-        proGrid <- wecdf(X[indices], NX, weights)
+        proGrid <- wecdf(X[indices], xgrid, weights)
         x1 <- 1-proGrid
         x <- c(x1)
-        y <- cbind(y, sort(x, decreasing = TRUE))
+        y <- cbind(y, x)
       }
     }
-    return(list(x = sort(xgrid), Tgrid = Tgrid, p = y))
+    return(list(x = xgrid, Tgrid = Tgrid, p = y))
   }else{cat("please choose a type between quantile and survival")}
 }#end of the function predict.hill.ts
 

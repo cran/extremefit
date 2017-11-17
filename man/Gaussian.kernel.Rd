@@ -24,4 +24,3 @@ plot(function(x) Gaussian.kernel(x), -2, 2,
 main = " Gaussian kernel")
 
 }
-

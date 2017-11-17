@@ -29,4 +29,3 @@ p <- seq(0.01, 0.99, 0.01)
 plot(p, wquantile(X, p, rep(1,length(X))), type = "s")
 
 }
-

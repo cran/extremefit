@@ -41,4 +41,3 @@ predict(hh, threshold.rank = 30)
 \seealso{
 \code{\link{hill}}
 }
-

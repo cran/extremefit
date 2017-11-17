@@ -91,4 +91,3 @@ Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric a
 \seealso{
 \code{\link{hill.adapt}}, \code{\link{Biweight.kernel}}, \code{\link{Epa.kernel}}, \code{\link{Rectangular.kernel}}, \code{\link{Triang.kernel}}, \code{\link{TruncGauss.kernel}}
 }
-

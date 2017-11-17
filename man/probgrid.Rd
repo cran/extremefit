@@ -29,4 +29,3 @@ length <- 500
 pgrid <- probgrid(p1, p2, length)
 
 }
-

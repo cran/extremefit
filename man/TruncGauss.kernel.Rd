@@ -26,4 +26,3 @@ plot(function(x) TruncGauss.kernel(x), -2, 2,
 main = " Truncated Gaussian kernel")
 
 }
-

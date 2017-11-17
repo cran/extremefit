@@ -2,8 +2,8 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{Pareto Distribution}
 \alias{Pareto Distribution}
-\alias{dpareto}
 \alias{ppareto}
+\alias{dpareto}
 \alias{qpareto}
 \alias{rpareto}
 \title{The Pareto Distribution}
@@ -66,4 +66,3 @@ n <- 100
 x <- rpareto(n)
 
 }
-

@@ -56,12 +56,11 @@ HH$Xadapt # is the adaptive threshold
 HH$hadapt # is the adaptive parameter of the Pareto distribution
 
 }
-\author{
-Ion Grama
-}
 \references{
 Grama, I. and Spokoiny, V. (2008). Statistics of extremes by oracle estimation. Ann. of Statist., 36, 1619-1648.
 
 Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
 }
-
+\author{
+Ion Grama
+}

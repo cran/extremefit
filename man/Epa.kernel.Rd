@@ -23,4 +23,3 @@ We recommend a critical value of 6.1 for this kernel function.
 plot(function(x) Epa.kernel(x), -2, 2, ylab = "Epanechnikov kernel function")
 
 }
-

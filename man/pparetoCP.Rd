@@ -61,4 +61,3 @@ n <- 100
 x <- rparetoCP(n)
 
 }
-

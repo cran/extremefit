@@ -47,4 +47,3 @@ predict(HH, 20, type = "survival")
 \seealso{
 \code{\link{hill.adapt}}
 }
-

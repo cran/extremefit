@@ -2,10 +2,10 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{Burr Distribution}
 \alias{Burr Distribution}
+\alias{rburr}
 \alias{dburr}
 \alias{pburr}
 \alias{qburr}
-\alias{rburr}
 \title{The Burr Distribution}
 \usage{
 rburr(n, a, k)
@@ -61,4 +61,3 @@ x <- rburr(n, 1, 1)
 
 
 }
-

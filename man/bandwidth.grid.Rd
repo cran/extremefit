@@ -35,4 +35,3 @@ length <- 20
 (h.uniform <- bandwidth.grid(hmin, hmax, length, type = "uniform"))
 
 }
-

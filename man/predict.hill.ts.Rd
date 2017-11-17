@@ -95,4 +95,3 @@ for(i in 1:n){
 \seealso{
 \code{\link{hill.ts}}
 }
-

@@ -29,4 +29,3 @@ plot(HH)
 \seealso{
 \code{\link{hill.adapt}}, \code{\link{plot}}
 }
-

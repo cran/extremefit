@@ -2,7 +2,7 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{plot.hill}
 \alias{plot.hill}
-\title{Hill Plot}
+\title{Hill plot}
 \usage{
 \method{plot}{hill}(x, xaxis = "ranks", ...)
 }

@@ -5,8 +5,9 @@
 \alias{print.hill.ts}
 \title{Compute the extreme quantile procedure on a time dependent data}
 \usage{
-hill.ts(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL,
-  CritVal = 3.6, gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
+hill.ts(X, t, Tgrid = seq(min(t), max(t), length = 10), h,
+  kernel = TruncGauss.kernel, kpar = NULL, CritVal = 3.6,
+  gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
 
 \method{print}{hill.ts}(x, ...)
 }
@@ -45,8 +46,6 @@ hill.ts(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL,
 }
 \description{
 Compute the function hill.adapt on time dependent data.
-
-Prints a hill.ts object
 }
 \details{
 For a given time serie and kernel function, the function hill.ts will give the results of the adaptive procedure for each \eqn{t}. The adaptive procedure is described in Durrieu et al. (2005).

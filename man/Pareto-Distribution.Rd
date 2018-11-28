@@ -6,7 +6,7 @@
 \alias{dpareto}
 \alias{qpareto}
 \alias{rpareto}
-\title{The Pareto Distribution}
+\title{Pareto distribution}
 \usage{
 ppareto(q, a = 1, loc = 0, scale = 1)
 

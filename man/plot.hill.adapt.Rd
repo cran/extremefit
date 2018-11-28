@@ -2,7 +2,7 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{plot.hill.adapt}
 \alias{plot.hill.adapt}
-\title{Hill.adapt Plot}
+\title{Hill.adapt plot}
 \usage{
 \method{plot}{hill.adapt}(x, ...)
 }

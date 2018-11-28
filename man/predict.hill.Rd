@@ -2,17 +2,19 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{predict.hill}
 \alias{predict.hill}
-\title{Predict the adaptive Survival or Quantile function}
+\title{Predict the adaptive survival or quantile function}
 \usage{
 \method{predict}{hill}(object, newdata = NULL, type = "quantile",
-  threshold.rank = 0, threshold = 0, ...)
+  input = NULL, threshold.rank = 0, threshold = 0, ...)
 }
 \arguments{
 \item{object}{output  object of the function hill.}
 
-\item{newdata}{optionally, a vector with which to predict. If omitted, the original data points are used.}
+\item{newdata}{optionally, a data frame or a vector with which to predict. If omitted, the original data points are used.}
 
 \item{type}{either "quantile" or "survival".}
+
+\item{input}{optionnaly, the name of the variable to estimate.}
 
 \item{threshold.rank}{the rank value for the hill output of the threshold, with default value 0.}
 
@@ -28,6 +30,8 @@ Give the adaptive survival function or quantile function
 }
 \details{
 If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the \code{hill} function.
+If \eqn{newdata} is a data frame, the variable from which to predict must be the first one or its name must start with a "p" if type = "quantile" and "x" if type = "survival".
+The name of the variable from which to predict can also be written as \eqn{input}.
 }
 \examples{
 x <- abs(rcauchy(100))

@@ -6,7 +6,7 @@
 \alias{dparetomix}
 \alias{qparetomix}
 \alias{rparetomix}
-\title{The Pareto mix Distribution}
+\title{Pareto mixture distribution}
 \usage{
 pparetomix(q, a = 1, b = 2, c = 0.75)
 

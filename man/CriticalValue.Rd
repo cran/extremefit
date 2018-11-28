@@ -5,8 +5,8 @@
 \title{Computation of the critical value in the hill.adapt function}
 \usage{
 CriticalValue(NMC, n, kernel = TruncGauss.kernel, kpar = NULL,
-  prob = 0.95, gridlen = 100, initprop = 0.1, r1 = 0.25, r2 = 0.05,
-  plot = FALSE)
+  prob = 0.95, gridlen = 100, initprop = 0.1, r1 = 0.25,
+  r2 = 0.05, plot = FALSE)
 }
 \arguments{
 \item{NMC}{the number of Monte-Carlo simulations.}

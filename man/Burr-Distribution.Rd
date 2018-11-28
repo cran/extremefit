@@ -6,7 +6,7 @@
 \alias{dburr}
 \alias{pburr}
 \alias{qburr}
-\title{The Burr Distribution}
+\title{Burr distribution}
 \usage{
 rburr(n, a, k)
 

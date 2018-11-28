@@ -21,6 +21,7 @@
 #' @param grid a vector of values for which the Hill estimator is computed.
 #'
 #' @details Compute the weighted Hill estimator for vectors \eqn{grid}, data and weights (see references below).
+#'
 #' @return
 #' \item{xsort}{the sorted data.}
 #' \item{wsort}{the weights assiociated to \eqn{xsort}.}
@@ -522,7 +523,7 @@ hill.adapt <- function(X,  weights = rep(1, length(X)) ,  initprop = 1/10,  grid
 # the following function visualise the selection procedure
 
 
-#' Hill.adapt Plot
+#' Hill.adapt plot
 #'
 #' @description Graphical representation of the hill.adapt function last iteration
 #'
@@ -612,7 +613,7 @@ wquantile <- function(X, p, weights = rep(1, length(X))){
   return(px)
 }
 
-#' Weighted Empirical Cumulative Distribution Function
+#' Weighted empirical cumulative distribution function
 #'
 #' @description Calculate the values of the weighted empirical cumulative distribution function for a given vector of data
 #'
@@ -718,7 +719,7 @@ wecdf <- function(X, x, weights = rep(1, length(X))){
 #' }
 #'
 #'
-hill.ts <- function(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL, CritVal = 3.6, gridlen = 100, initprop = 1/10,  r1 = 1/4,  r2 = 1/20){
+hill.ts <- function(X, t, Tgrid = seq(min(t), max(t), length = 10) , h, kernel = TruncGauss.kernel, kpar = NULL, CritVal = 3.6, gridlen = 100, initprop = 1/10,  r1 = 1/4,  r2 = 1/20){
   # By Kevin Jaunatre 2015
   # Input : X.ts is a time serie
   # kernel is a kernel function for the weights
@@ -1234,16 +1235,19 @@ goftest.hill.ts <- function(object, X, t, plot = FALSE, ...){
 ##############################################################################################
 # the following functions compute the weighed adaptive quantiles and survival functions
 
-#' Predict the adaptive Survival or Quantile function
+#' Predict the adaptive survival or quantile function
 #'
 #' @description Give the adaptive survival function or quantile function
 #'
 #' @param object output object of the function hill.adapt.
-#' @param newdata optionally, a vector with which to predict. If omitted, the original data points are used.
+#' @param newdata optionally, a data frame or a vector with which to predict. If omitted, the original data points are used.
 #' @param type either "quantile" or "survival".
+#' @param input optionnaly, the name of the variable to estimate.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @details If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the \code{hill.adapt} function.
+#' If \eqn{newdata} is a data frame, the variable from which to predict must be the first one or its name must start with a "p" if type = "quantile" and "x" if type = "survival".
+#' The name of the variable from which to predict can also be written as \eqn{input}.
 #'
 #' @return The function provide the quantile assiociated to the adaptive model for the probability grid (transformed to -log(1-p) in the output) if type = "quantile". And the survival function assiociated to the adaptive model for the quantile grid if type = "survival".
 #'
@@ -1270,77 +1274,155 @@ goftest.hill.ts <- function(object, X, t, plot = FALSE, ...){
 #' predict(HH, 20, type = "survival")
 #' 1 - pparetoCP(20)
 #'
-predict.hill.adapt <- function(object, newdata = NULL, type = "quantile",  ...){
+
+predict.hill.adapt <- function(object, newdata = NULL, type = "quantile", input = NULL,  ...){
   # Input: hill.adapt is the output of the function hill.adapt
   # grid is a probabilities grid if type = "quantile" or a quantile grid if type = "survival"
   # type is either quantile to estimate the quantiles or survival to estimate the survival function
   # Output: matrix of grid and their quantile/probabilities assiociated
-
-  if(type == "quantile"){
-    n <- length(object$Xsort)
-    X <- object$Xsort
-    Theta <- object$hadapt
-    pgrid <- newdata
-    if(is.null(pgrid)){pgrid <- 1:(length(object$Xsort)-1)/length(object$Xsort)}
-    if(!is.na(Theta)){
-      weights <- object$sortweights
-      Xsort <- sort(X)
-      Xord <- (order(X))
-      word <- weights[Xord]
-      p0 <- wecdf(Xsort, object$Xadapt, word)
-      x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
-      x2 <- object$Xadapt*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
-      y <- as.numeric(c(x1, x2))
+  if(is.data.frame(newdata)){
+    if(type == "quantile"){
+      n <- length(object$Xsort)
+      X <- object$Xsort
+      Theta <- object$hadapt
+      if(!is.null(input)){
+        pgrid <- as.vector(newdata[,input])
+      }else{
+        pgrid <- as.vector(newdata[,grep("^[Pp]", names(newdata), value=TRUE)])
+        if(length(pgrid)==0){
+          pgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Pp]", names(newdata), value=TRUE))>1){
+          pgrid <- as.vector(newdata[,min(grep("^[Pp]", names(newdata), value=TRUE))])
+        }
+        if(is.null(pgrid)){pgrid <- 1:(length(object$Xsort)-1)/length(object$Xsort)}
+      }
+      if(!is.na(Theta)){
+        weights <- object$sortweights
+        Xsort <- sort(X)
+        Xord <- (order(X))
+        word <- weights[Xord]
+        p0 <- wecdf(Xsort, object$Xadapt, word)
+        x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
+        x2 <- object$Xadapt*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
+        y <- as.numeric(c(x1, x2))
+      }else{
+        weights <- object$sortweights
+        Xsort <- sort(X)
+        x1 <- wquantile(Xsort, pgrid, weights)
+        y <- x1
+      }
+      res <- list(x = pgrid, y = y[!is.na(y)])
+      class(res) <- "predict.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else if(type == "survival"){
+      n <- length(object$Xsort)
+      Xsort <- sort(object$Xsort)
+      if(!is.null(input)){
+        xgrid <- as.vector(newdata[,input])
+      }else{
+        xgrid <- as.vector(newdata[,grep("^[Xx]", names(newdata), value=TRUE)])
+        if(length(xgrid)==0){
+          xgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Xx]", names(newdata), value=TRUE))>1){
+          xgrid <- as.vector(newdata[,min(grep("^[Xx]", names(newdata), value=TRUE))])
+        }
+        if(is.null(xgrid)){xgrid <- object$Xsort}
+      }
+      proGrid <- wecdf(object$Xsort, xgrid, object$sortweights)
+      pTau <- wecdf(object$Xsort, object$Xadapt, object$sortweights)
+      tau <- object$Xadapt
+      Theta <- object$hadapt
+      y <- rep(NA,length(xgrid))
+      if(!is.na(Theta)){
+        y[which(xgrid<tau)] <- 1-proGrid[which(xgrid<tau)]
+        y[which(xgrid>= tau)] <- (1-ppareto(xgrid[which(xgrid>= tau)], a = 1/Theta, scale = tau))*(1-pTau)
+      }else{
+        proGrid <- wecdf(Xsort, xgrid, weights)
+        x1 <- 1-proGrid
+        x <- c(x1)
+        y <- x
+      }
+      res <- list(x = xgrid, y = y)
+      class(res) <- "predict.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
     }else{
-      weights <- object$sortweights
-      Xsort <- sort(X)
-      x1 <- wquantile(Xsort, pgrid, weights)
-      y <- x1
+      cat("please choose a type between quantile and survival")
     }
-    res <- list(p = pgrid, y = y[!is.na(y)])
-    class(res) <- "predict.adapt"
-    #attr(res,  "call")  <-  sys.call()
-    res
-  }else if(type == "survival"){
-    n <- length(object$Xsort)
-    Xsort <- sort(object$Xsort)
-    xgrid <- newdata
-    if(is.null(xgrid)){xgrid <- object$Xsort}
-    proGrid <- wecdf(object$Xsort, xgrid, object$sortweights)
-    pTau <- wecdf(object$Xsort, object$Xadapt, object$sortweights)
-    tau <- object$Xadapt
-    Theta <- object$hadapt
-    y <- rep(NA,length(xgrid))
-    if(!is.na(Theta)){
-      y[which(xgrid<tau)] <- 1-proGrid[which(xgrid<tau)]
-      y[which(xgrid>= tau)] <- (1-ppareto(xgrid[which(xgrid>= tau)], a = 1/Theta, scale = tau))*(1-pTau)
+  }else if(is.vector(newdata)|is.null(newdata)){
+    if(type == "quantile"){
+      n <- length(object$Xsort)
+      X <- object$Xsort
+      Theta <- object$hadapt
+      pgrid <- newdata
+      if(is.null(pgrid)){pgrid <- 1:(length(object$Xsort)-1)/length(object$Xsort)}
+      if(!is.na(Theta)){
+        weights <- object$sortweights
+        Xsort <- sort(X)
+        Xord <- (order(X))
+        word <- weights[Xord]
+        p0 <- wecdf(Xsort, object$Xadapt, word)
+        x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
+        x2 <- object$Xadapt*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
+        y <- as.numeric(c(x1, x2))
+      }else{
+        weights <- object$sortweights
+        Xsort <- sort(X)
+        x1 <- wquantile(Xsort, pgrid, weights)
+        y <- x1
+      }
+      res <- list(x = pgrid, y = y[!is.na(y)])
+      class(res) <- "predict.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else if(type == "survival"){
+      n <- length(object$Xsort)
+      Xsort <- sort(object$Xsort)
+      xgrid <- newdata
+      if(is.null(xgrid)){xgrid <- object$Xsort}
+      proGrid <- wecdf(object$Xsort, xgrid, object$sortweights)
+      pTau <- wecdf(object$Xsort, object$Xadapt, object$sortweights)
+      tau <- object$Xadapt
+      Theta <- object$hadapt
+      y <- rep(NA,length(xgrid))
+      if(!is.na(Theta)){
+        y[which(xgrid<tau)] <- 1-proGrid[which(xgrid<tau)]
+        y[which(xgrid>= tau)] <- (1-ppareto(xgrid[which(xgrid>= tau)], a = 1/Theta, scale = tau))*(1-pTau)
+      }else{
+        proGrid <- wecdf(Xsort, xgrid, weights)
+        x1 <- 1-proGrid
+        x <- c(x1)
+        y <- x
+      }
+      res <- list(x = xgrid, y = y)
+      class(res) <- "predict.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
     }else{
-      proGrid <- wecdf(Xsort, xgrid, weights)
-      x1 <- 1-proGrid
-      x <- c(x1)
-      y <- x
+      cat("please choose a type between quantile and survival")
     }
-    res <- list(x = xgrid, p = y)
-    class(res) <- "predict.adapt"
-    #attr(res,  "call")  <-  sys.call()
-    res
-  }else{
-    cat("please choose a type between quantile and survival")
   }
-}#end of function predict.hill.adapt
+}
+#end of function predict.hill.adapt
 
-#' Predict the adaptive Survival or Quantile function
+#' Predict the adaptive survival or quantile function
 #'
 #' @description Give the adaptive survival function or quantile function
 #'
 #' @param object output  object of the function hill.
-#' @param newdata optionally, a vector with which to predict. If omitted, the original data points are used.
+#' @param newdata optionally, a data frame or a vector with which to predict. If omitted, the original data points are used.
 #' @param type either "quantile" or "survival".
+#' @param input optionnaly, the name of the variable to estimate.
 #' @param threshold.rank the rank value for the hill output of the threshold, with default value 0.
 #' @param threshold the value of threshold, with default value 0.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @details If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the \code{hill} function.
+#' If \eqn{newdata} is a data frame, the variable from which to predict must be the first one or its name must start with a "p" if type = "quantile" and "x" if type = "survival".
+#' The name of the variable from which to predict can also be written as \eqn{input}.
 #'
 #' @return The function provide the quantile assiociated to the adaptive model for the probability grid (transformed to -log(1-p) in the output) if type = "quantile". And the survival function assiociated to the adaptive model for the quantile grid if type = "survival".
 #' @export
@@ -1355,63 +1437,124 @@ predict.hill.adapt <- function(object, newdata = NULL, type = "quantile",  ...){
 #' #example for a fixed rank value of threshold
 #' predict(hh, threshold.rank = 30)
 #'
-predict.hill <- function(object, newdata = NULL, type = "quantile", threshold.rank = 0, threshold = 0, ...){
+predict.hill <- function(object, newdata = NULL, type = "quantile", input = NULL, threshold.rank = 0, threshold = 0, ...){
   # Input: object is the output of the function hill
   # threshold.rank is the rank we use as a threshold
   # type is either quantile to estimate the quantiles or survival to estimate the survival function
   # Output: matrix of grid and their quantile/probabilities assiociated
-  n <- length(object$xsort)
-  Xsort <- object$xsort
-  Xord <- (order((object$xsort)))
-  word <- object$wsort
-  if(threshold.rank == 0){
-    if(threshold == 0){
-      cat("please enter a value for either threshold.rank or threshold. \n")
+  if(is.data.frame(newdata)){
+    n <- length(object$xsort)
+    Xsort <- object$xsort
+    Xord <- (order((object$xsort)))
+    word <- object$wsort
+    if(threshold.rank == 0){
+      if(threshold == 0){
+        cat("please enter a value for either threshold.rank or threshold. \n")
+      }else{
+        Theta <- hill(object$xsort, object$wsort, threshold)$hill}
     }else{
-      Theta <- hill(object$xsort, object$wsort, threshold)$hill}
-  }else{
-    Theta <- object$hill[threshold.rank]
-  }
-  if(threshold.rank == 0){
-    tau <- threshold
-  }else{
-    tau <- Xsort[threshold.rank]
-  }
-  if(type == "quantile"){
-    p0 <- wecdf(Xsort, tau, word)
-    pgrid <- newdata
-    if(is.null(pgrid)){pgrid <- 1:(length(object$xsort)-1)/length(object$xsort)}
-    #pgrid <- sort(c(p0, pgrid))
-    x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
-    x2 <- tau*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
-    y <- c(x1, x2)
-    return(list(p = pgrid, y = y[!is.na(y)]))
-  }
-  if(type == "survival"){
-    xgrid <- newdata
-    if (is.null(xgrid)) {
-      xgrid <- object$xsort
+      Theta <- object$hill[threshold.rank]
     }
-    proGrid <- wecdf(Xsort, xgrid, word)
-    proTau <- wecdf(Xsort, tau, word)
-    y <- rep(NA,length(xgrid))
-    y[which(xgrid <= tau)] <- 1 - proGrid[which(xgrid <= tau)]
-    y[which(xgrid > tau)] <- (1 - ppareto(xgrid[which(xgrid > tau)], a = 1/Theta,
-                       scale = tau)) * (1 - proTau)
-    return(list(x = xgrid, p = y))
-  }else{cat("please choose a type between quantile and survival")}
+    if(threshold.rank == 0){
+      tau <- threshold
+    }else{
+      tau <- Xsort[threshold.rank]
+    }
+    if(type == "quantile"){
+      p0 <- wecdf(Xsort, tau, word)
+      if(!is.null(input)){
+        pgrid <- as.vector(newdata[,input])
+      }else{
+        pgrid <- as.vector(newdata[,grep("^[Pp]", names(newdata), value=TRUE)])
+        if(length(pgrid)==0){
+          pgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Pp]", names(newdata), value=TRUE))>1){
+          pgrid <- as.vector(newdata[,min(grep("^[Pp]", names(newdata), value=TRUE))])
+        }
+      }
+      #pgrid <- sort(c(p0, pgrid))
+      x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
+      x2 <- tau*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
+      y <- c(x1, x2)
+      return(list(x = pgrid, y = y[!is.na(y)]))
+    }
+    if(type == "survival"){
+      if(!is.null(input)){
+        xgrid <- as.vector(newdata[,input])
+      }else{
+        xgrid <- as.vector(newdata[,grep("^[Xx]", names(newdata), value=TRUE)])
+        if(length(xgrid)==0){
+          xgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Xx]", names(newdata), value=TRUE))>1){
+          xgrid <- as.vector(newdata[,min(grep("^[Xx]", names(newdata), value=TRUE))])
+        }
+      }
+      proGrid <- wecdf(Xsort, xgrid, word)
+      proTau <- wecdf(Xsort, tau, word)
+      y <- rep(NA,length(xgrid))
+      y[which(xgrid <= tau)] <- 1 - proGrid[which(xgrid <= tau)]
+      y[which(xgrid > tau)] <- (1 - ppareto(xgrid[which(xgrid > tau)], a = 1/Theta,
+                                            scale = tau)) * (1 - proTau)
+      return(list(x = xgrid, y = y))
+    }else{cat("please choose a type between quantile and survival")}
+  }
+  else if(is.vector(newdata)|is.null(newdata)){
+    n <- length(object$xsort)
+    Xsort <- object$xsort
+    Xord <- (order((object$xsort)))
+    word <- object$wsort
+    if(threshold.rank == 0){
+      if(threshold == 0){
+        cat("please enter a value for either threshold.rank or threshold. \n")
+      }else{
+        Theta <- hill(object$xsort, object$wsort, threshold)$hill}
+    }else{
+      Theta <- object$hill[threshold.rank]
+    }
+    if(threshold.rank == 0){
+      tau <- threshold
+    }else{
+      tau <- Xsort[threshold.rank]
+    }
+    if(type == "quantile"){
+      p0 <- wecdf(Xsort, tau, word)
+      pgrid <- newdata
+      if(is.null(pgrid)){pgrid <- 1:(length(object$xsort)-1)/length(object$xsort)}
+      #pgrid <- sort(c(p0, pgrid))
+      x1 <- wquantile(Xsort, pgrid[which(pgrid<p0)], word)
+      x2 <- tau*((1-p0)/(1-pgrid[which(pgrid>= p0)]))^(Theta)
+      y <- c(x1, x2)
+      return(list(x = pgrid, y = y[!is.na(y)]))
+    }
+    if(type == "survival"){
+      xgrid <- newdata
+      if(is.null(xgrid)){xgrid <- object$xsort}
+      proGrid <- wecdf(Xsort, xgrid, word)
+      proTau <- wecdf(Xsort, tau, word)
+      y <- rep(NA,length(xgrid))
+      y[which(xgrid <= tau)] <- 1 - proGrid[which(xgrid <= tau)]
+      y[which(xgrid > tau)] <- (1 - ppareto(xgrid[which(xgrid > tau)], a = 1/Theta,
+                                            scale = tau)) * (1 - proTau)
+      return(list(x = xgrid, y = y))
+    }else{cat("please choose a type between quantile and survival")}
+  }
 }#end of function predict.hill
 
-#' Predict the adaptive Survival or Quantile function for a time serie
+#' Predict the adaptive survival or auantile function for a time serie
 #'
 #' @description  Give the adaptive survival function or quantile function of a time serie
 #'
 #' @param object output object of the function hill.ts.
-#' @param newdata optionally, a vector with which to predict. If omitted, the original data points are used.
+#' @param newdata optionally, a data frame or a vector with which to predict. If omitted, the original data points are used.
 #' @param type either "quantile" or "survival".
+#' @param input optionnaly, the name of the variable to estimate.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @details If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the function \code{hill.ts}.
+#' If \eqn{newdata} is a data frame, the variable from which to predict must be the first one or its name must start with a "p" if type = "quantile" and "x" if type = "survival".
+#' The name of the variable from which to predict can also be written as \eqn{input}.
 #'
 #' @return
 #'   \item{p}{the input vector of probabilities.}
@@ -1487,114 +1630,231 @@ predict.hill <- function(object, newdata = NULL, type = "quantile", threshold.ra
 #'
 #'
 #'
-predict.hill.ts <- function(object, newdata = NULL, type = "quantile", ...){
+predict.hill.ts <- function(object, newdata = NULL, type = "quantile", input = NULL, ...){
   # By Kevin Jaunatre 2015
   # Input : X is a vector of data
   # hill.ts is the output of the function hill.ts
-  # grid is a probabilities grid if type = "quantile" or a quantile grid if type = "survival"
+  # newdata is a probabilities grid if type = "quantile" or a quantile grid if type = "survival"
   # type is either quantile to estimate the quantiles or survival to estimate the survival function
   # Output : list with grid and the survival or quantile function assiociated for each t
-  X <- object$X
-  t <- object$t
-  if(type == "quantile"){
-    n <- length(X)
-    Theta <- object$Theta
-    tau <- object$threshold
-    Tgrid <- object$Tgrid
-    kernel <- object$kernel
-    pgrid <- newdata
-    if(is.null(pgrid)){pgrid <- 1:(length(X)-1)/length(X)}
-    if(length(object$h) == 1){
-      h <- rep(object$h, length(Tgrid))
-    }else{h <- object$h}
-    y <- NULL
-    for(i in 1:length(Tgrid)){
-      if(!is.na(Theta[i])){
-        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
-        t.ind <- t[indices]
-        tx <- (t.ind-Tgrid[i])/h[i]
-        if( is.null(object$kpar) ){
-          par <- list(tx)
-        }else{
-          par <- list(tx, object$kpar)
-        }
-        weights <- do.call(kernel,par)
-        Xt <- X[indices]
-        p0 <- wecdf(Xt, tau[i], weights)
-        #pgrid <- sort(c(p0, pgrid))
-        x1 <- wquantile(Xt, pgrid[which(pgrid<= p0)], weights)
-        x2 <- tau[i]*((1-p0)/(1-pgrid[which(pgrid>p0)]))^(Theta[i])
-        y <- cbind(y, c(x1, x2))
+  if(is.data.frame(newdata)){
+    X <- object$X
+    t <- object$t
+    if(type == "quantile"){
+      n <- length(X)
+      Theta <- object$Theta
+      tau <- object$threshold
+      Tgrid <- object$Tgrid
+      kernel <- object$kernel
+      if(!is.null(input)){
+        pgrid <- as.vector(newdata[,input])
       }else{
-        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
-        t.ind <- t[indices]
-        tx <- (t.ind-Tgrid[i])/h[i]
-        if( is.null(object$kpar) ){
-          par <- list(tx)
-        }else{
-          par <- list(tx, object$kpar)
+        pgrid <- as.vector(newdata[,grep("^[Pp]", names(newdata), value=TRUE)])
+        if(length(pgrid)==0){
+          pgrid <- as.vector(newdata[,1])
         }
-        weights <- do.call(kernel,par)
-        Xt <- X[indices]
-        x1 <- wquantile(Xt, pgrid, weights)
-        y <- cbind(y, x1)
+        if(length(grep("^[Pp]", names(newdata), value=TRUE))>1){
+          pgrid <- as.vector(newdata[,min(grep("^[Pp]", names(newdata), value=TRUE))])
+        }
       }
+      if(length(object$h) == 1){
+        h <- rep(object$h, length(Tgrid))
+      }else{h <- object$h}
+      y <- NULL
+      for(i in 1:length(Tgrid)){
+        if(!is.na(Theta[i])){
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          Xt <- X[indices]
+          p0 <- wecdf(Xt, tau[i], weights)
+          #pgrid <- sort(c(p0, pgrid))
+          x1 <- wquantile(Xt, pgrid[which(pgrid<= p0)], weights)
+          x2 <- tau[i]*((1-p0)/(1-pgrid[which(pgrid>p0)]))^(Theta[i])
+          y <- cbind(y, c(x1, x2))
+        }else{
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          Xt <- X[indices]
+          x1 <- wquantile(Xt, pgrid, weights)
+          y <- cbind(y, x1)
+        }
+      }
+      return(list(p = pgrid, Tgrid = Tgrid, y = y))
     }
-    return(list(p = pgrid, Tgrid = Tgrid, y = y))
+    if(type == "survival"){
+      n <- length(X)
+      tau <- object$threshold
+      Theta <- object$Theta
+      Tgrid <- object$Tgrid
+      kernel <- object$kernel
+      if(!is.null(input)){
+        xgrid <- as.vector(newdata[,input])
+      }else{
+        xgrid <- as.vector(newdata[,grep("^[Xx]", names(newdata), value=TRUE)])
+        if(length(xgrid)==0){
+          xgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Xx]", names(newdata), value=TRUE))>1){
+          xgrid <- as.vector(newdata[,min(grep("^[Xx]", names(newdata), value=TRUE))])
+        }
+        if(is.null(xgrid)){xgrid <- X}
+      }
+      if(length(object$h) == 1){
+        h <- rep(object$h, length(t))
+      }else{h <- object$h}
+      y <- NULL
+      for(i in 1:length(Tgrid)){
+        if(!is.na(Theta[i])){
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          proGrid <- wecdf(X[indices], xgrid, weights)
+          pTau <- wecdf(X[indices], tau[i], weights)
+          x <- rep(NA,length(xgrid))
+          x[which(xgrid<= tau[i])] <- 1-proGrid[which(xgrid<= tau[i])]
+          x[which(xgrid>tau[i])] <- (1-ppareto(xgrid[which(xgrid>tau[i])], a = 1/Theta[i], scale = tau[i]))*(1-pTau)
+          y <- cbind(y, x)
+        }else{
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          proGrid <- wecdf(X[indices], xgrid, weights)
+          x1 <- 1-proGrid
+          x <- c(x1)
+          y <- cbind(y, x)
+        }
+      }
+      return(list(x = xgrid, Tgrid = Tgrid, p = y))
+    }else{cat("please choose a type between quantile and survival")}
+  }else if(is.vector(newdata)|is.null(newdata)){
+    X <- object$X
+    t <- object$t
+    if(type == "quantile"){
+      n <- length(X)
+      Theta <- object$Theta
+      tau <- object$threshold
+      Tgrid <- object$Tgrid
+      kernel <- object$kernel
+      pgrid <- newdata
+      if(is.null(pgrid)){pgrid <- 1:(length(X)-1)/length(X)}
+      if(length(object$h) == 1){
+        h <- rep(object$h, length(Tgrid))
+      }else{h <- object$h}
+      y <- NULL
+      for(i in 1:length(Tgrid)){
+        if(!is.na(Theta[i])){
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          Xt <- X[indices]
+          p0 <- wecdf(Xt, tau[i], weights)
+          #pgrid <- sort(c(p0, pgrid))
+          x1 <- wquantile(Xt, pgrid[which(pgrid<= p0)], weights)
+          x2 <- tau[i]*((1-p0)/(1-pgrid[which(pgrid>p0)]))^(Theta[i])
+          y <- cbind(y, c(x1, x2))
+        }else{
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          Xt <- X[indices]
+          x1 <- wquantile(Xt, pgrid, weights)
+          y <- cbind(y, x1)
+        }
+      }
+      return(list(p = pgrid, Tgrid = Tgrid, y = y))
+    }
+    if(type == "survival"){
+      n <- length(X)
+      tau <- object$threshold
+      Theta <- object$Theta
+      Tgrid <- object$Tgrid
+      kernel <- object$kernel
+      xgrid <- newdata
+      if(is.null(xgrid)){xgrid <- X}
+      if(length(object$h) == 1){
+        h <- rep(object$h, length(t))
+      }else{h <- object$h}
+      y <- NULL
+      for(i in 1:length(Tgrid)){
+        if(!is.na(Theta[i])){
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          proGrid <- wecdf(X[indices], xgrid, weights)
+          pTau <- wecdf(X[indices], tau[i], weights)
+          x <- rep(NA,length(xgrid))
+          x[which(xgrid<= tau[i])] <- 1-proGrid[which(xgrid<= tau[i])]
+          x[which(xgrid>tau[i])] <- (1-ppareto(xgrid[which(xgrid>tau[i])], a = 1/Theta[i], scale = tau[i]))*(1-pTau)
+          y <- cbind(y, x)
+        }else{
+          indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
+          t.ind <- t[indices]
+          tx <- (t.ind-Tgrid[i])/h[i]
+          if( is.null(object$kpar) ){
+            par <- list(tx)
+          }else{
+            par <- list(tx, object$kpar)
+          }
+          weights <- do.call(kernel,par)
+          proGrid <- wecdf(X[indices], xgrid, weights)
+          x1 <- 1-proGrid
+          x <- c(x1)
+          y <- cbind(y, x)
+        }
+      }
+      return(list(x = xgrid, Tgrid = Tgrid, p = y))
+    }else{cat("please choose a type between quantile and survival")}
   }
-  if(type == "survival"){
-    n <- length(X)
-    tau <- object$threshold
-    Theta <- object$Theta
-    Tgrid <- object$Tgrid
-    kernel <- object$kernel
-    xgrid <- newdata
-    if(is.null(xgrid)){xgrid <- X}
-    if(length(object$h) == 1){
-      h <- rep(object$h, length(t))
-    }else{h <- object$h}
-    y <- NULL
-    for(i in 1:length(Tgrid)){
-      if(!is.na(Theta[i])){
-        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
-        t.ind <- t[indices]
-        tx <- (t.ind-Tgrid[i])/h[i]
-        if( is.null(object$kpar) ){
-          par <- list(tx)
-        }else{
-          par <- list(tx, object$kpar)
-        }
-        weights <- do.call(kernel,par)
-        proGrid <- wecdf(X[indices], xgrid, weights)
-        pTau <- wecdf(X[indices], tau[i], weights)
-        x <- rep(NA,length(xgrid))
-        x[which(xgrid<= tau[i])] <- 1-proGrid[which(xgrid<= tau[i])]
-        x[which(xgrid>tau[i])] <- (1-ppareto(xgrid[which(xgrid>tau[i])], a = 1/Theta[i], scale = tau[i]))*(1-pTau)
-        y <- cbind(y, x)
-      }else{
-        indices <- which((t>= Tgrid[i]-h[i])&(t<= Tgrid[i]+h[i]))
-        t.ind <- t[indices]
-        tx <- (t.ind-Tgrid[i])/h[i]
-        if( is.null(object$kpar) ){
-          par <- list(tx)
-        }else{
-          par <- list(tx, object$kpar)
-        }
-        weights <- do.call(kernel,par)
-        proGrid <- wecdf(X[indices], xgrid, weights)
-        x1 <- 1-proGrid
-        x <- c(x1)
-        y <- cbind(y, x)
-      }
-    }
-    return(list(x = xgrid, Tgrid = Tgrid, p = y))
-  }else{cat("please choose a type between quantile and survival")}
 }#end of the function predict.hill.ts
 
 #############################################################################################
 # the following functions are plotting results
 
-#' Hill Plot
+#' Hill plot
 #'
 #' @description Graphical representation of the hill estimator.
 #'
@@ -1760,7 +2020,7 @@ bootCI <- function(X, weights = rep(1, length(X)), probs = 1:(length(X)-1)/lengt
     }
     if(plot == T){
       pred.true <- predict(hx, newdata = probs, type = "quantile")
-      plot(-log(1-pred.true$p), log(pred.true$y), type = "l", xlab = "-log(1-p)", ylab = "log(quantiles)")
+      plot(-log(1-pred.true$x), log(pred.true$y), type = "l", xlab = "-log(1-p)", ylab = "log(quantiles)")
       lines(-log(1-probs), log(quantInf), col = "green")
       lines(-log(1-probs), log(quantSup), col = "green")
     }
@@ -1772,7 +2032,7 @@ bootCI <- function(X, weights = rep(1, length(X)), probs = 1:(length(X)-1)/lengt
       xb <- X[ind]
       wb <- weights[ind]
       hm <- hill.adapt(xb, wb, initprop = initprop, gridlen = gridlen, r1 = r1,  r2 = r2,  CritVal = CritVal)
-      pred[, b] <- as.numeric(predict(hm, newdata = xgrid, type = "survival")$p)
+      pred[, b] <- as.numeric(predict(hm, newdata = xgrid, type = "survival")$y)
     }
     survInf <- NULL
     survSup <- NULL
@@ -1782,7 +2042,7 @@ bootCI <- function(X, weights = rep(1, length(X)), probs = 1:(length(X)-1)/lengt
     }
     if(plot == T){
       pred.true <- predict(hx, newdata = xgrid, type = "survival")
-      plot(log(pred.true$x), pred.true$p, type = "l", xlab = "log(x)", ylab = "Survival probability")
+      plot(log(pred.true$x), pred.true$y, type = "l", xlab = "log(x)", ylab = "Survival probability")
       lines(log(xgrid), survInf, col = "green")
       lines(log(xgrid), survSup, col = "green")
     }
@@ -1920,7 +2180,7 @@ bootCI.ts <- function(X, t, Tgrid, h, kernel =  TruncGauss.kernel, kpar = NULL, 
         xb <- x[ind]
         wb <- weights[ind]
         hm <- hill.adapt(xb, wb, initprop = initprop, gridlen = gridlen, r1 = r1,  r2 = r2,  CritVal = CritVal)
-        Ppred[j, b] <- as.numeric(predict(hm, newdata = threshold, type = "survival")$p)
+        Ppred[j, b] <- as.numeric(predict(hm, newdata = threshold, type = "survival")$y)
       }
    }
     SurvInf <- NULL
@@ -1935,7 +2195,7 @@ bootCI.ts <- function(X, t, Tgrid, h, kernel =  TruncGauss.kernel, kpar = NULL, 
     }
     if(plot == T){
       pred.true <- predict(hh, newdata = threshold, type = "survival")
-      plot(Tgrid, as.numeric(pred.true$p), type = "l", ylim = c(min(SurvInf)-0.1, max(SurvSup)+0.1), xlab = "Tgrid", ylab = "Survival probability")
+      plot(Tgrid, as.numeric(pred.true$y), type = "l", ylim = c(min(SurvInf)-0.1, max(SurvSup)+0.1), xlab = "Tgrid", ylab = "Survival probability")
       lines(Tgrid, SurvInf, col = "green")
       lines(Tgrid, SurvSup, col = "green")
       #lines(-log(1-pg), log(quantEmpInf), col = "blue", lty = 2)
@@ -2148,7 +2408,7 @@ bandwidth.grid <- function(hmin, hmax, length = 20, type = "geometric"){
 # ########################################################################
 
 
-#' The Pareto mix Distribution
+#' Pareto mixture distribution
 #'
 #' @name Pareto mix
 #'
@@ -2233,7 +2493,7 @@ rparetomix <- function(n, a = 1, b = 2, c = 0.75, precision = 10^(-10)){
 
 
 
-#' Pareto Change Point distribution
+#' Pareto change point distribution
 #'
 #' @description Distribution function, quantile function and random generation for the Pareto change point distribution with \eqn{a0} equal to the shape of the first pareto distribution, \eqn{a1} equal to the shape of the second pareto distribution, \eqn{x0} equal to the scale and \eqn{x1} equal to the change point.
 #'
@@ -2298,7 +2558,7 @@ rparetoCP <- function(n, a0 = 1, a1 = 2, x0 = 1, x1 = 6){
   x0*((x <= y1)*  ((1-x)^(-1/a0)) +  (x > y1)* ((1-x)^(-1/a1) * (x1/x0)^(1-a0/a1) )  )
 }
 
-#' The Pareto Distribution
+#' Pareto distribution
 #'
 #' @name Pareto Distribution
 #'
@@ -2378,7 +2638,7 @@ rpareto  <-  function(n,  a = 1,  loc = 0,  scale = 1)
 ####################################################################
 # Burr distribution
 
-#' The Burr Distribution
+#' Burr distribution
 #'
 #' @name Burr Distribution
 #'
@@ -2519,3 +2779,672 @@ rburr.dependent <- function(n, a, b, alpha){
   }else{res <- qburr(invY, a, b)}
   return(res)
 }
+
+##################################################
+# Cox Model with extremes
+
+#' Compute the extreme quantile procedure for Cox model
+#'
+#' @param X a numeric vector of data values.
+#' @param cph an output object of the function coxph from the package survival.
+#' @param cens a binary vector corresponding to the censored values.
+#' @param data a data frame containing the covariates values.
+#' @param initprop the initial proportion at which we begin to test the model.
+#' @param gridlen the length of the grid for which the test is done.
+#' @param r1 a proportion value of the data from the right that we skip in the test statistic.
+#' @param r2 a proportion value of the data from the left that we skip in the test statistic.
+#' @param CritVal the critical value assiociated to procedure.
+#'
+#' @return
+#' \item{coefficients}{the coefficients of the coxph procedure.}
+#' \item{Xsort}{the sorted vector of the data.}
+#' \item{sortcens}{the sorted vector of the censorship.}
+#' \item{sortebz}{the sorted matrix of the covariates.}
+#' \item{ch}{the Hill estimator associated to the baseline function.}
+#' \item{TestingGrid}{the grid used for the statistic test.}
+#' \item{TS,TS1,TS.max,TS1.max}{respectively the test statistic, the likelihood ratio test, the maximum of the test statistic and the maximum likelihood ratio test.}
+#' \item{window1,window2}{indices from which the threshold was chosen.}
+#' \item{Paretodata}{logical: if TRUE the distribution of the data is a Pareto distribution.}
+#' \item{Paretotail}{logical: if TRUE a Pareto tail was detected.}
+#' \item{madapt}{the first indice of the TestingGrid for which the test statistic exceeds the critical value.}
+#' \item{kadapt}{the adaptive indice of the threshold.}
+#' \item{kadapt.maxlik}{the maximum likelihood corresponding to the adaptive threshold in the selected testing grid.}
+#' \item{hadapt}{the adaptive weighted parameter of the Pareto distribution after the threshold.}
+#' \item{Xadapt}{the adaptive threshold.}
+#'
+#' @details Given a vector of data, a vector of censorship and a data frame of covariates, this function compute the adaptive procedure described in Grama and Jaunatre (2018).
+#'
+#' We suppose that the data are in the domain of attraction of the Frechet-Pareto type and that the hazard are somewhat proportionals. Otherwise, the procedure will not work.
+#'
+#' @seealso \code{\link{coxph}}
+#'
+#' @references
+#' Grama, I. and Jaunatre, K. (2018). Estimation of Extreme Survival Probabilities with Cox Model. arXiv:1805.01638.
+#'
+#' @author Ion Grama, Kevin Jaunatre
+#'
+#' @export
+#' @examples
+#'
+#' library(survival)
+#' data(bladder)
+#'
+#' X <- bladder2$stop-bladder2$start
+#' Z <- as.matrix(bladder2[, c(2:4, 8)])
+#' delta <- bladder2$event
+#'
+#' ord <- order(X)
+#' X <- X[ord]
+#' Z <- Z[ord,]
+#' delta <- delta[ord]
+#'
+#' cph<-coxph(Surv(X, delta) ~ Z)
+#'
+#' ca <- cox.adapt(X, cph, delta, Z)
+#'
+cox.adapt <- function(X, cph, cens = rep(1, length(X)) , data = rep(0, length(X)),  initprop = 1/10,  gridlen = 100,  r1 = 1/4,  r2 = 1/20,  CritVal = 10){
+
+  if(dim(data)[2]>1){
+    namesCoef <- substr(names(cph$coefficients),2,200)
+    indnames <- NULL
+    for( nn in 1:length(namesCoef)){
+      indnames[nn] <- which(names(data) %in% namesCoef[nn])
+    }
+    z <- data[,indnames]
+    ebz <- exp(rowSums(t(cph$coefficients*t(z))))
+  }else{
+    ebz <- exp(t(cph$coefficients)%*%t(data))[1,]
+  }
+
+
+
+  hillcox = function(x,cens = rep(1, length(x)),ebz){
+    n <- length(x)
+    Xsort <- rev(sort(x))
+    Xord <- rev(order(x))
+    cord <- cens[Xord]
+    ebz<-ebz[Xord]
+    k <- 2:n
+    #cat('word[k] = ', word[k], '\n')
+    #Y <- hillpoint(grid)
+    Y<-(cumsum(ebz[k-1] * log(Xsort[k-1]))-log(Xsort[k])*cumsum(ebz[k-1]))/cumsum(cord[k-1])
+    c(NA, Y)
+  }
+
+  WeightedTestStatistCens = function(X, cens = rep(1, length(X)),ebz, m){
+
+    G.KL = function(x){x - log(1 + x)}		# define a function to compute Kullback-Leibler information
+    #######################################
+
+    # order log(X) and censure
+    n <- length(X)
+    order <- rev(order(X))
+    Xsort <- rev(sort(X))
+    lnX <- log(Xsort)
+    cens <- cens[order]
+    ebz<-ebz[order]
+
+    Scens <- cumsum(cens[1:n])	  # compute the cumulative censure time
+    SX<-pmax(cumsum( ebz[1:(n-1)] * lnX[1:(n-1)]) - lnX[2:n] * cumsum(ebz[1:(n-1)]), 0)
+    wh1 <- SX[1:(n-1)]/Scens[1:(n-1)]        # compute wighted Hill's estimator at X_2, X_3, ..., X_n (attention! X_1 is excluded )
+    wh2 <- abs(SX[m-1]-SX[1:(m-1)])/(Scens[m-1]-Scens[1:(m-1)]); wh2[m-1] = NA  # compute weighted wh2  at X_2, X_3, ..., X_m (attention! X_1 is excluded )
+    # do not delete the following comment
+    # sometimes the difference SX[m-1]-SX[1:(m-1)] can be negative
+    # because of the computing error (of order -10^-17)
+    # that is why in the above formula we used abs(...)
+
+
+    TS1 <- Scens[1:(m-1)] * G.KL(  wh1[1:(m-1)]/wh1[m-1] - 1  )                  # compute weighted TS1  at X_2, X_3, ..., X_m (attention! X_1 is excluded )
+    TS2 <- (Scens[m-1]-Scens[1:(m-1)]) * G.KL(  wh2[1:(m-1)]/wh1[m-1] - 1  )  # compute weighted TS2  at X_2, X_3, ..., X_m (attention! X_1 is excluded )
+
+    # we can compute normalized TS1 and TS2 if necessary (not used in the sequel)
+    #varW = sqrt(mean(weights[1:m]^2))   # the normalisation is not used here
+    #TS1 = TS1/varW   # the normalisation is not used here
+    #TS2 = TS2/varW # the normalisation is not used here
+
+    ###############
+    # the output
+
+    list(CTS1 = TS1,  CTS2 = TS2,  wh1 = wh1[1:(m-1)],  wh2 = wh2[1:(m-1)])
+
+  } # end of WeightedTestStatist
+
+  argmaxw <- function(x,  window){ window[rev(order(x[window]))]}
+
+
+  n <- length(X)
+  ch <- hillcox(X, cens = cens,ebz=ebz)
+  Xsort <- sort(X, decreasing = TRUE)
+  order <- rev(order(X))
+  sortcens <- cens[order]
+  sortebz <- ebz[order]
+  cscens <- cumsum(sortcens)
+  initprop <- max(initprop,3/n)  # = ifelse(floor(n*initprop) > 3, initprop, 3/n)
+  gridlen <- min(gridlen,n-1)
+
+  Paretodata <- TRUE   # Paretodata = TRUE if the whole data are from Pareto law
+  Paretotail <- FALSE	# this variable will indicate if the tail is
+  FirstTime <- TRUE	# FirstTime is a control valiable to verify if the test statistic exceeds CritVal from the very beginning
+  # i.e. FirstTime = TRUE if it is the first passage of the loop in  m in TestingGrid
+
+  mad <- n
+
+
+  Grid <- floor(seq(1,  n-1,  length = gridlen))
+
+
+
+  if(n > 3)   {  # begin if n>3
+    #############################################################################################
+    #####  logSpacings = (1:(n-1))*log( Xsort[1:(n-1)]/Xsort[2:n] );   # compute the log spacings
+    #############################################################################################
+
+    #cat("this line is to check correctness in hill.adapt: floor(n * initprop) = ", floor(n * initprop), "\n")
+
+
+    while(floor(n * initprop) >= 3) {		# at the end of the while if  m0 = n * initprop is too large we resume with initprop = 0.8 * initprop
+      # n * initprop cannot take value 3
+      #cat("this line is to check correctness in hill.adapt: n * initprop = ", n * initprop, "\n") #  this line is to print the init propotion
+      #cat("this line is to check correctness in hill.adapt: Grid = ", Grid, "\n")
+
+      count_k0_too_smal = 0
+      TS.max <- rep(NA,  n)  # to store TS.max  for each m in TesingGrid
+      TS1.max <- rep(NA,  n) # to store TS1.max for each m in TesingGrid
+      kadapt.maxlik <- rep(NA,  n) # to store kadapt for each m in TesingGrid
+
+      FirstTime <- TRUE
+
+      TestingGrid <- Grid[Grid >=   max(floor(n * initprop), 3)   ] 	# select testing points > =  m0 = n * initprop on the grid (attention! initprop can change if  m0 is too large at the next repeat loop)
+
+
+      #cat(" TestingGrid = ", TestingGrid, "\n")
+      #cat(" max(floor(n * initprop), 3) = ", max(floor(n * initprop), 3), "\n")
+
+
+      #print(paste(      "floor(n * initprop) = ", floor(n * initprop)            ))
+      #print(paste("n = ", n * initprop))
+
+      #for(m in (TestingGrid)) {   # this loop compute iteratively the test statistics TS.max and TS1.max
+      for(indm in 1:length(TestingGrid)) {   # this loop compute iteratively the test statistics TS.max and TS1.max
+        # the previous line was introduces by Pham ?????? apparently to have acces to the index \hat m -1 the last accepted
+
+        m <- TestingGrid[indm]
+        #cat("this line is to check correctness in hill.adapt: m = ", m, "\n") #  this line is to print m
+        #cat("this line is to check correctness in hill.adapt: indm = ", indm, "\n") #  this line is to print m
+
+        TTSS <- WeightedTestStatistCens(X, cens,ebz, m)  # compute the test statistic
+        TS <- TTSS$CTS1 + TTSS$CTS2		# computed at     X_2, X_3, ..., X_m
+        TS1 <- TTSS$CTS1					# computed at     X_2, X_3, ..., X_m
+        TS <- c(NA, TS)						# computed at X_1, X_2, X_3, ..., X_m
+        TS1 <- c(NA, TS1)				    # computed at X_1, X_2, X_3, ..., X_m
+        #put the cumulative weights
+        cumsumw <- 1:n
+
+        #cat("TS = ", TS, "\n") #  this line is to check correctness
+
+        restrictedw <- which(cumsumw >=  r1*cumsumw[m] & cumsumw <=  (1-r2)*cumsumw[m] )
+        if(sum(sortcens[restrictedw])==0)next
+        w1 <- min(restrictedw)
+        w2 <- max(restrictedw)
+
+
+        window1 <- max(2,    w1  ) 	#define left  end of the testing window in the set X_1, X_2, X_3, ..., X_m
+        window2 <- min(m-2,  w2  ) 	#define right end of the testing window in the set X_1, X_2, X_3, ..., X_m
+
+        #cat("window1 = ", window1, "\n") 	#  this line is to check correctness
+        #cat("window2 = ", window2, "\n") 	#  this line is to check correctness
+        #print(paste("m = ", m))			#  this line is to check correctness
+        #print(window1:window2)			#  this line is to check correctness
+
+        kadapt.maxlik[m] <- argmaxw(TS1,  window = window1:window2)[1]
+        ### kadapt.maxlik[m] is the adaptive value of k
+        ### computed by penalized maxlikelihood (PML) for each m of the TesingGrid
+
+        # the next 2 lines are included to plot the outputs (they are not necessary to compute the adaptive threshold  kadapt)
+        TS.max[m] <- max(TS[window1:window2])     # store TS.max for each m
+        TS1.max[m] <- max(TS1[window1:window2])	 # store TS1.max for each m
+
+
+        if( (TS.max[m] >=  CritVal) & (!is.na(TS.max[m])) ) {
+          if(FirstTime & (count_k0_too_smal<10) ) {
+
+            #cat("k0 is too small: resume with the next element on the grid\n");
+            count_k0_too_smal <- count_k0_too_smal+1
+            next;
+          } else if(FirstTime == FALSE){
+            mad <- TestingGrid[ifelse(indm == 1,  1,  indm-1)]
+            Paretodata <- FALSE
+            Paretotail <- TRUE
+            break
+          } else {
+            Paretodata <- FALSE
+            Paretotail <- FALSE
+            break
+          }
+        }
+
+        FirstTime <- FALSE
+      }#end for(m in TestingGrid) # this is the end of loop on the testing grid
+
+
+      ### the final part of the program
+
+      ### in the following line we verify if the test statistic exceeds CritVal
+      ### from the very beginning
+      ### and if TS.max[m0] is > CritVal at m0 we resume with a diminished initprop
+
+      if(FirstTime  ==  FALSE | initprop < 5/n) break
+
+      initprop <- initprop * 0.8
+      #cat("initprop is too large: resume with initprop = 0.8*initprop\n")
+    } #end while(n*initprop > 3)
+
+    if(Paretodata) {
+      if(FirstTime) {
+        #cat("No Pareto tail detected\n")
+        Paretotail <- FALSE
+        mad <- NA
+        kadapt.maxlik.Final <- NA
+        hdapt.maxlik <- NA
+        Xdapt.maxlik <- NA
+      }
+      else {
+        mad <- n
+        kadapt.maxlik.Final <- n
+      }
+    }
+    else {
+      kadapt.maxlik.Final <- kadapt.maxlik[mad]		# the adaptive  k
+    }
+
+    ### end of the final part of the program
+
+    ### the following line was included to choose between MLE and CP approach: do not use in this version
+    ### if(MLE == T){kad = kml; had = hml; Xad = Xml} else {kad = kls; had = hls; Xad = Xls}
+  }  # end if n>3
+
+  else{  # begin if n<=3
+    TestingGrid <- NA
+    TS <- NA
+    TS1 <- NA
+    TS.max <- NA
+    TS1.max <- NA
+    Paretodata <- NA  # logical: if  = F the data has no Pareto tail
+    Paretotail <- NA  # logical: if  = T a Pareto tail was detected
+    mad <- NA # madapt = mad,          # the adaptive m
+    kadapt.maxlik.Final <- n  #kadapt = kadapt.maxlik.Final,   # the adaptive k
+    kadapt.maxlik <- NA  #kadapt.maxlik = kadapt.maxlik,  # maximum points for TS1
+  }  # end else if n>3
+
+  coefs <- cph$coefficients
+  names(coefs) <- substr(names(cph$coefficients),start = 2,stop=200)
+  res <- list(
+    coefficients = coefs,
+    Xsort = Xsort,  # sorted data X
+    sortcens = sortcens,  # sorted censure
+    sortebz = sortebz, # sorted covariates
+    ch = ch,  # hill estimator
+    TestingGrid = TestingGrid,
+    TS = TS,
+    TS1 = TS1,
+    window1 = window1,
+    window2 = window2,
+    TS.max = TS.max,
+    TS1.max = TS1.max,
+    Paretodata = Paretodata,  # logical: if  = F the data has no Pareto tail
+    Paretotail = Paretotail,  # logical: if  = T a Pareto tail was detected
+    madapt = mad,          # the adaptive m
+    kadapt = kadapt.maxlik.Final,   # the adaptive k
+    kadapt.maxlik = kadapt.maxlik,  # maximum points for TS1
+    hadapt =  ifelse( is.na(kadapt.maxlik.Final) , NA,  ch[kadapt.maxlik.Final] ),   # the adaptive weighted h
+    Xadapt =  ifelse( is.na(kadapt.maxlik.Final) , NA,  Xsort[kadapt.maxlik.Final])  # the adaptive X
+  )
+
+  class(res) <- "cox.adapt"
+  #attr(res,  "call")  <-  sys.call()
+  res
+
+}
+
+
+##############################################################################################
+# Compute the predicted quantiles and survival probabilities for cox model
+
+#' Predict the survival or quantile function from the extreme procedure for the Cox model
+#'
+#' @description Give the survival or quantile function from the extreme procedure for the Cox model
+#'
+#' @param object output object of the function cox.adapt.
+#' @param newdata a data frame with which to predict.
+#' @param type either "quantile" or "survival".
+#' @param input optionnaly, the name of the variable to estimate.
+#' @param aggregation either "none", "simple" or "adaptive".
+#' @param AggInd Indices of thresholds to be aggregated.
+#' @param M Number of thresholds to be aggregated.
+#' @param ... further arguments passed to or from other methods.
+#'
+#' @details \eqn{newdata} must be a data frame with the co-variables from which to predict and a variable of probabilities with its name starting with a "p" if type = "quantile" or a variable of quantiles with its name starting with a "x" if type = "survival".
+#' The name of the variable from which to predict can also be written as \eqn{input}.
+#'
+#' @return The function provide the quantile assiociated to the adaptive model for the probability grid if type = "quantile". And the survival function assiociated to the adaptive model for the quantile grid if type = "survival".
+#'
+#' @seealso \code{\link{cox.adapt}}
+#'
+#' @export
+#'
+#' @examples
+#'
+#' library(survival)
+#' data(bladder)
+#'
+#' X <- bladder2$stop-bladder2$start
+#' Z <- as.matrix(bladder2[, c(2:4, 8)])
+#' delta <- bladder2$event
+#'
+#' ord <- order(X)
+#' X <- X[ord]
+#' Z <- Z[ord,]
+#' delta <- delta[ord]
+#'
+#' cph<-coxph(Surv(X, delta) ~ Z)
+#'
+#' ca <- cox.adapt(X, cph, delta, bladder2[ord,])
+#'
+#' xgrid <- X
+#' newdata <- as.data.frame(cbind(xgrid,bladder2[ord,]))
+#'
+#' Plac <- predict(ca, newdata = newdata, type = "survival")
+#' Treat <- predict(ca, newdata = newdata, type = "survival")
+#'
+#' PlacSA <- predict(ca, newdata = newdata,
+#'                           type = "survival", aggregation = "simple", AggInd = c(10,20,30,40))
+#' TreatSA <- predict(ca, newdata = newdata,
+#'                           type = "survival", aggregation = "simple", AggInd = c(10,20,30,40))
+#'
+#'
+#' PlacAA <- predict(ca, newdata = newdata,
+#'                           type = "survival", aggregation = "adaptive", M=10)
+#' TreatAA <- predict(ca, newdata = newdata,
+#'                           type = "survival", aggregation = "adaptive", M=10)
+#'
+predict.cox.adapt <- function(object, newdata = NULL, input = NULL, type = "quantile", aggregation = "none", AggInd = object$kadapt, M=10, ...){
+  if(aggregation == "none"){
+    tau<-object$Xadapt
+    theta<-object$hadapt
+
+    Xrev <- rev(object$Xsort)
+    Ebzrev <- rev(object$sortebz)
+    Censrev <- rev(object$sortcens)
+    h0 <- NULL
+    for(i in 1:length(Xrev)){
+      h0[i]<- Censrev[i]/(sum(Ebzrev[which(Xrev>=Xrev[i])]))
+    }
+
+
+    Htau <- sum(h0[which(Xrev<=tau)])
+    Stau <- exp(-Htau)
+    indnames <- NULL
+    for( nn in 1:length(names(object$coefficients))){
+      indnames[nn] <- which(names(newdata) %in% names(object$coefficients)[nn])
+    }
+    newz <- newdata[,indnames]
+
+
+    if(type == "quantile"){
+      if(!is.null(input)){
+        pgrid <- as.vector(newdata[,input])
+      }else{
+        pgrid <- as.vector(newdata[,grep("^[Pp]", names(newdata), value=TRUE)])
+        if(length(pgrid)==0){
+          pgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Pp]", names(newdata), value=TRUE))>1){
+          pgrid <- as.vector(newdata[,min(grep("^[Pp]", names(newdata), value=TRUE))])
+        }
+      }
+      u <- pgrid^exp(-rowSums(t(object$coefficients*t(newz))))
+
+      x1 <- ifelse(u<(1-Stau),wquantile(Xrev, u),tau*(Stau/(1-u))^(theta))
+      y <- as.numeric(x1)
+      res <- list( newdata = newdata, y = y )
+      class(res) <- "predict.cox.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else if(type == "survival"){
+      if(!is.null(input)){
+        xgrid <- as.vector(newdata[,input])
+      }else{
+        xgrid <- as.vector(newdata[,grep("^[Xx]", names(newdata), value=TRUE)])
+        if(length(xgrid)==0){
+          xgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Xx]", names(newdata), value=TRUE))>1){
+          xgrid <- as.vector(newdata[,min(grep("^[Xx]", names(newdata), value=TRUE))])
+        }
+      }
+      if(is.na(tau)){
+        Hchap<-NULL
+        for(i in 1:length(xgrid)){
+          Hchap[i]<-if(xgrid[i]<Xrev[1]){0}else{
+            sum(h0[which(Xrev<=xgrid[i])])
+          }
+        }
+      }else{
+        Hchap<-NULL
+        for(i in 1:length(xgrid)){
+          Hchap[i]<-if(xgrid[i]<Xrev[1]){0}else{
+            (xgrid[i]<=tau)*sum(h0[which(Xrev<=xgrid[i])])+(xgrid[i]>tau)*(sum(h0[which(Xrev<=tau)])+1/theta*log(xgrid[i]/tau))
+          }
+        }
+      }
+
+      Schap<-exp(-Hchap)
+      res <- list(newdata = newdata, p = Schap^exp(-rowSums(t(object$coefficients*t(newz)))))
+      class(res) <- "predict.cox.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else{
+      cat("please choose a type between quantile and survival")
+    }
+  }else if(aggregation == "simple"){
+    tau<-object$Xadapt
+    theta<-object$hadapt
+
+    Xrev <- rev(object$Xsort)
+    Ebzrev <- rev(object$sortebz)
+    Censrev <- rev(object$sortcens)
+    h0 <- NULL
+    for(i in 1:length(Xrev)){
+      h0[i]<- Censrev[i]/(sum(Ebzrev[which(Xrev>=Xrev[i])]))
+    }
+
+    indnames <- NULL
+    for( nn in 1:length(names(object$coefficients))){
+      indnames[nn] <- which(names(newdata) %in% names(object$coefficients)[nn])
+    }
+    newz <- newdata[,indnames]
+
+    if(type == "quantile"){
+
+      Hc <- object$ch
+      n <- length(object$Xsort)
+      ktau <- AggInd
+      if(!is.null(input)){
+        pgrid <- as.vector(newdata[,input])
+      }else{
+        pgrid <- as.vector(newdata[,grep("^[Pp]", names(newdata), value=TRUE)])
+        if(length(pgrid)==0){
+          pgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Pp]", names(newdata), value=TRUE))>1){
+          pgrid <- as.vector(newdata[,min(grep("^[Pp]", names(newdata), value=TRUE))])
+        }
+      }
+      QuantMoy <- matrix(0,ncol=length(pgrid),nrow=length(ktau))
+      u <- pgrid^exp(-rowSums(t(object$coefficients*t(newz))))
+      for(k in 1:length(ktau)){
+        indtau <- ktau[k]
+        tau <- Xrev[n-indtau+1]
+        theta <- Hc[indtau]
+        Stau <- exp(-sum(h0[which(Xrev<=tau)]))
+        x1 <- ifelse(u<(1-Stau),wquantile(Xrev, u),tau*(Stau/(1-u))^(theta))
+        QuantMoy[k,] <- as.numeric(x1)
+      }
+
+      y <- colMeans(QuantMoy)
+      res <- list(newdata = newdata,y = y )
+      class(res) <- "predict.cox.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else if(type == "survival"){
+      if(!is.null(input)){
+        xgrid <- as.vector(newdata[,input])
+      }else{
+        xgrid <- as.vector(newdata[,grep("^[Xx]", names(newdata), value=TRUE)])
+        if(length(xgrid)==0){
+          xgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Xx]", names(newdata), value=TRUE))>1){
+          xgrid <- as.vector(newdata[,min(grep("^[Xx]", names(newdata), value=TRUE))])
+        }
+      }
+
+      H0X <- NULL
+      i <- 1
+      for(xt in xgrid){
+        H0X[i] <- sum(h0[which(Xrev<=xt)])
+        i <- i+1
+      }
+
+
+      Hc <- object$ch
+      n <- length(object$Xsort)
+      ktau <- AggInd
+      H0tauMoy <- matrix(0,ncol=length(xgrid),nrow=length(ktau))
+      for(k in 1:length(ktau)){
+        indtau <- ktau[k]
+        tau <- Xrev[n-indtau+1]
+        theta <- Hc[indtau]
+        H0tauMoy[k,] <- ifelse(xgrid<=tau,H0X,sum(h0[which(Xrev<=tau)])+(1/theta)*log(xgrid/tau))
+
+      }
+      H0tauMoyT <- colMeans(H0tauMoy)
+      StauMoyT <- exp(-H0tauMoyT)
+
+      res <- list(newdata = newdata, p = StauMoyT^exp(-rowSums(t(object$coefficients*t(newz)))))
+      class(res) <- "predict.cox.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else{
+      cat("please choose a type between quantile and survival")
+    }
+  }else if(aggregation == "adaptive"){
+    tau<-object$Xadapt
+    theta<-object$hadapt
+
+    Xrev <- rev(object$Xsort)
+    Ebzrev <- rev(object$sortebz)
+    Censrev <- rev(object$sortcens)
+    h0 <- NULL
+    for(i in 1:length(Xrev)){
+      h0[i]<- Censrev[i]/(sum(Ebzrev[which(Xrev>=Xrev[i])]))
+    }
+    H0 <- cumsum(h0)
+
+    indnames <- NULL
+    for( nn in 1:length(names(object$coefficients))){
+      indnames[nn] <- which(names(newdata) %in% names(object$coefficients)[nn])
+    }
+    newz <- newdata[,indnames]
+
+    if(type == "quantile"){
+
+      Hc <- object$ch
+      n <- length(object$Xsort)
+      vrais <- object$TS1
+
+
+      ktauAd <- object$window1:object$window2
+      VraisTau <- vrais[ktauAd]
+      ordVrais <- order(VraisTau,decreasing = TRUE)
+      indTauVrais <- ordVrais[1:min(M,length(ordVrais))]
+      VraisTauOrd <- sort(VraisTau,decreasing = TRUE)[1:min(M,length(ordVrais))]
+
+      if(!is.null(input)){
+        pgrid <- as.vector(newdata[,input])
+      }else{
+        pgrid <- as.vector(newdata[,grep("^[Pp]", names(newdata), value=TRUE)])
+        if(length(pgrid)==0){
+          pgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Pp]", names(newdata), value=TRUE))>1){
+          pgrid <- as.vector(newdata[,min(grep("^[Pp]", names(newdata), value=TRUE))])
+        }
+      }
+      QuantMoy <- matrix(0,ncol=length(pgrid),nrow=length(ktauAd))
+      u <- pgrid^exp(-rowSums(t(object$coefficients*t(newz))))
+      for(k in 1:min(M,length(ordVrais))){
+        indtau <- ktauAd[indTauVrais[k]]
+        tau <- Xrev[n-indtau+1]
+        theta <- Hc[indtau]
+        Stau <- exp(-sum(h0[which(Xrev<=tau)]))
+        x1 <- ifelse(u<(1-Stau),wquantile(Xrev, u),tau*(Stau/(1-u))^(theta))
+        QuantMoy[k,] <- (VraisTauOrd[k]/sum(VraisTauOrd))*as.numeric(x1)
+      }
+
+      y <- colSums(QuantMoy)
+      res <- list(newdata = newdata, y = y)
+      class(res) <- "predict.cox.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else if(type == "survival"){
+      if(!is.null(input)){
+        xgrid <- as.vector(newdata[,input])
+      }else{
+        xgrid <- as.vector(newdata[,grep("^[Xx]", names(newdata), value=TRUE)])
+        if(length(xgrid)==0){
+          xgrid <- as.vector(newdata[,1])
+        }
+        if(length(grep("^[Xx]", names(newdata), value=TRUE))>1){
+          xgrid <- as.vector(newdata[,min(grep("^[Xx]", names(newdata), value=TRUE))])
+        }
+      }
+      H0X <- NULL
+      i <- 1
+      for(xt in xgrid){
+        H0X[i] <- sum(h0[which(Xrev<=xt)])
+        i <- i+1
+      }
+      Hc <- object$ch
+      vrais <- object$TS1
+      n <- length(object$Xsort)
+
+      ktauAd <- object$window1:object$window2
+      VraisTau <- vrais[ktauAd]
+      ordVrais <- order(VraisTau,decreasing = TRUE)
+      indTauVrais <- ordVrais[1:min(M,length(ordVrais))]
+      VraisTauOrd <- sort(VraisTau,decreasing = TRUE)[1:min(M,length(ordVrais))]
+
+      H0tauAdMoy <- matrix(0,ncol=length(xgrid),nrow=min(M,length(ordVrais)))
+      for(k in 1:min(M,length(ordVrais))){
+        indtau <- ktauAd[indTauVrais[k]]
+        tau <- Xrev[n-indtau+1]
+        theta <- Hc[indtau]
+        H0tauAdMoy[k,] <-(VraisTauOrd[k]/sum(VraisTauOrd))*ifelse(xgrid<=tau,H0X,(sum(h0[which(Xrev<=tau)]))+(1/theta)*log(xgrid/tau))
+      }
+      H0tauAdMoyT <- colSums(H0tauAdMoy)
+      StauAdMoyT <- exp(-H0tauAdMoyT)
+
+      res <- list(newdata = newdata, p = StauAdMoyT^exp(-rowSums(t(object$coefficients*t(newz)))))
+      class(res) <- "predict.cox.adapt"
+      #attr(res,  "call")  <-  sys.call()
+      res
+    }else{
+      cat("please choose a type between quantile and survival")
+    }
+  }else{cat("please choose an aggregation type between none, simple and adaptive")}
+}
+
+
+
+

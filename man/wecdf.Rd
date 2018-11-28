@@ -2,7 +2,7 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{wecdf}
 \alias{wecdf}
-\title{Weighted Empirical Cumulative Distribution Function}
+\title{Weighted empirical cumulative distribution function}
 \usage{
 wecdf(X, x, weights = rep(1, length(X)))
 }

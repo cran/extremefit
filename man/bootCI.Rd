@@ -4,10 +4,10 @@
 \alias{bootCI}
 \title{Pointwise confidence intervals by bootstrap}
 \usage{
-bootCI(X, weights = rep(1, length(X)), probs = 1:(length(X) - 1)/length(X),
-  xgrid = sort(X), B = 100, alpha = 0.05, type = "quantile",
-  CritVal = 10, initprop = 1/10, gridlen = 100, r1 = 1/4, r2 = 1/20,
-  plot = F)
+bootCI(X, weights = rep(1, length(X)), probs = 1:(length(X) -
+  1)/length(X), xgrid = sort(X), B = 100, alpha = 0.05,
+  type = "quantile", CritVal = 10, initprop = 1/10, gridlen = 100,
+  r1 = 1/4, r2 = 1/20, plot = F)
 }
 \arguments{
 \item{X}{a numeric vector of data values.}

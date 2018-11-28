@@ -4,7 +4,7 @@
 \alias{pparetoCP}
 \alias{qparetoCP}
 \alias{rparetoCP}
-\title{Pareto Change Point distribution}
+\title{Pareto change point distribution}
 \usage{
 pparetoCP(x, a0 = 1, a1 = 2, x0 = 1, x1 = 6)
 

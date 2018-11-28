@@ -2,16 +2,19 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{predict.hill.ts}
 \alias{predict.hill.ts}
-\title{Predict the adaptive Survival or Quantile function for a time serie}
+\title{Predict the adaptive survival or auantile function for a time serie}
 \usage{
-\method{predict}{hill.ts}(object, newdata = NULL, type = "quantile", ...)
+\method{predict}{hill.ts}(object, newdata = NULL, type = "quantile",
+  input = NULL, ...)
 }
 \arguments{
 \item{object}{output object of the function hill.ts.}
 
-\item{newdata}{optionally, a vector with which to predict. If omitted, the original data points are used.}
+\item{newdata}{optionally, a data frame or a vector with which to predict. If omitted, the original data points are used.}
 
 \item{type}{either "quantile" or "survival".}
+
+\item{input}{optionnaly, the name of the variable to estimate.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -27,6 +30,8 @@ Give the adaptive survival function or quantile function of a time serie
 }
 \details{
 If type = "quantile", \eqn{newdata} must be between 0 and 1. If type = "survival", \eqn{newdata} must be in the domain of the data from the function \code{hill.ts}.
+If \eqn{newdata} is a data frame, the variable from which to predict must be the first one or its name must start with a "p" if type = "quantile" and "x" if type = "survival".
+The name of the variable from which to predict can also be written as \eqn{input}.
 }
 \examples{
 #Generate a pareto mixture sample of size n with a time varying parameter

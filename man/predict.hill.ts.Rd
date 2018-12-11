@@ -2,7 +2,7 @@
 % Please edit documentation in R/PackageOxygen.R
 \name{predict.hill.ts}
 \alias{predict.hill.ts}
-\title{Predict the adaptive survival or auantile function for a time serie}
+\title{Predict the adaptive survival or quantile function for a time serie}
 \usage{
 \method{predict}{hill.ts}(object, newdata = NULL, type = "quantile",
   input = NULL, ...)

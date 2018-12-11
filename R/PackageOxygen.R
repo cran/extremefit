@@ -1542,7 +1542,7 @@ predict.hill <- function(object, newdata = NULL, type = "quantile", input = NULL
   }
 }#end of function predict.hill
 
-#' Predict the adaptive survival or auantile function for a time serie
+#' Predict the adaptive survival or quantile function for a time serie
 #'
 #' @description  Give the adaptive survival function or quantile function of a time serie
 #'

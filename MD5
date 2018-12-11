@@ -1,6 +1,6 @@
-7513b3c3ac119b4440515ba29b93cd9a *DESCRIPTION
+3654bc7f4dfd6ccb20aee9e8043142ce *DESCRIPTION
 b826d9edfb86c769f8ea7def30735244 *NAMESPACE
-f233d75dc937ec54a8f40a7f32225a24 *R/PackageOxygen.R
+a3607fe0629c711571523d41bbb71f38 *R/PackageOxygen.R
 ff2a4baa88c685faac6c9a483a6b56bc *data/LoadCurve.rda
 a2da9795173b08fe9c8b8e3151271eb2 *data/dataOyster.rda
 83a94c02027cd01d91fd7a441cb146bd *data/dataWind.rda
@@ -35,7 +35,7 @@ b282619c2d9185ae586a7fab2594f543 *man/hill.ts.Rd
 00be3a9c1e0df5c0d5ea687d55e774be *man/predict.cox.adapt.Rd
 0ec13a9014e6b1db4508976e105b8dae *man/predict.hill.Rd
 0ed9f748962b37a54df85d3627d1fef1 *man/predict.hill.adapt.Rd
-e204ecb3e0b47d0a0e9f836e67614d30 *man/predict.hill.ts.Rd
+4f0a141de6da073454bc79c5c52769af *man/predict.hill.ts.Rd
 938a5ea4c2f293db99713bd7f205846a *man/probgrid.Rd
 58d688be7c9947a1564ca34c77a97802 *man/rburr.dependent.Rd
 16b6d16b067f07265844a3e881400c10 *man/wecdf.Rd

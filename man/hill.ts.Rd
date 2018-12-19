@@ -86,6 +86,8 @@ Tgrid <- seq(0.01, 0.99, 0.01)
 }
 \references{
 Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
+
+Durrieu, G. and Grama, I. and Jaunatre, K. and Pham, Q.-K. and Tricot, J.-M. (2018). extremefit: A Package for Extreme Quantiles. Journal of Statistical Software, 87, 1--20.
 }
 \seealso{
 \code{\link{hill.adapt}}, \code{\link{Biweight.kernel}}, \code{\link{Epa.kernel}}, \code{\link{Rectangular.kernel}}, \code{\link{Triang.kernel}}, \code{\link{TruncGauss.kernel}}

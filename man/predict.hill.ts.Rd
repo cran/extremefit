@@ -97,6 +97,9 @@ for(i in 1:n){
 
 
 }
+\references{
+Durrieu, G. and Grama, I. and Jaunatre, K. and Pham, Q.-K. and Tricot, J.-M. (2018). extremefit: A Package for Extreme Quantiles. Journal of Statistical Software, 87, 1--20.
+}
 \seealso{
 \code{\link{hill.ts}}
 }

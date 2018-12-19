@@ -59,7 +59,9 @@ HH$hadapt # is the adaptive parameter of the Pareto distribution
 \references{
 Grama, I. and Spokoiny, V. (2008). Statistics of extremes by oracle estimation. Ann. of Statist., 36, 1619-1648.
 
-Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
+Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M. (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
+
+Durrieu, G. and Grama, I. and Jaunatre, K. and Pham, Q.-K. and Tricot, J.-M. (2018). extremefit: A Package for Extreme Quantiles. Journal of Statistical Software, 87, 1--20.
 }
 \author{
 Ion Grama

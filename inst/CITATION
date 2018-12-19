@@ -1,0 +1,27 @@
+bibentry(bibtype = "Article",
+  title        = "{extremefit}: A Package for Extreme Quantiles",
+  author       = c(person(given = "Gilles",
+                          family = "Durrieu",
+                          email = "gilles.durrieu@univ-ubs.fr"),
+                   person(given = "Ion",
+                          family = "Grama",
+                          email = "ion.grama@univ-ubs.fr"),
+                   person(given = "Kevin",
+                          family = "Jaunatre",
+                          email = "kevin.jaunatre@univ-ubs.fr"),
+                   person(given = "Quang-Khoai",
+                          family = "Pham",
+                          email = "quangkhoaihd@gmail.com"),
+                   person(given = "Jean-Marie",
+                          family = "Tricot",
+                          email = "jean-marie.tricot@univ-ubs.fr")),
+  journal      = "Journal of Statistical Software",
+  year         = "2018",
+  volume       = "87",
+  number       = "12",
+  pages        = "1--20",
+  doi          = "10.18637/jss.v087.i12",
+
+  header       = "To cite extremefit in publications use:"
+)
+

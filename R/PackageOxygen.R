@@ -101,7 +101,9 @@ hill <- function(X, weights = rep(1, length(X)), grid = X){
 #' @references
 #' Grama, I. and Spokoiny, V. (2008). Statistics of extremes by oracle estimation. Ann. of Statist., 36, 1619-1648.
 #'
-#' Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
+#' Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M. (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
+#'
+#' Durrieu, G. and Grama, I. and Jaunatre, K. and Pham, Q.-K. and Tricot, J.-M. (2018). extremefit: A Package for Extreme Quantiles. Journal of Statistical Software, 87, 1--20.
 #'
 #' @author Ion Grama
 #'
@@ -683,7 +685,11 @@ wecdf <- function(X, x, weights = rep(1, length(X))){
 #' \item{Theta}{the adaptive estimator of \eqn{\theta} for each \eqn{t} in \eqn{Tgrid}.}
 #'
 #'
-#' @references Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
+#' @references
+#'
+#' Durrieu, G. and Grama, I. and Pham, Q. and Tricot, J.- M (2015). Nonparametric adaptive estimator of extreme conditional tail probabilities quantiles. Extremes, 18, 437-478.
+#'
+#' Durrieu, G. and Grama, I. and Jaunatre, K. and Pham, Q.-K. and Tricot, J.-M. (2018). extremefit: A Package for Extreme Quantiles. Journal of Statistical Software, 87, 1--20.
 #'
 #' @export
 #' @seealso \code{\link{hill.adapt}}, \code{\link{Biweight.kernel}}, \code{\link{Epa.kernel}}, \code{\link{Rectangular.kernel}}, \code{\link{Triang.kernel}}, \code{\link{TruncGauss.kernel}}
@@ -1251,6 +1257,10 @@ goftest.hill.ts <- function(object, X, t, plot = FALSE, ...){
 #'
 #' @return The function provide the quantile assiociated to the adaptive model for the probability grid (transformed to -log(1-p) in the output) if type = "quantile". And the survival function assiociated to the adaptive model for the quantile grid if type = "survival".
 #'
+#' @references
+#'
+#' Durrieu, G. and Grama, I. and Jaunatre, K. and Pham, Q.-K. and Tricot, J.-M. (2018). extremefit: A Package for Extreme Quantiles. Journal of Statistical Software, 87, 1--20.
+#'
 #' @seealso \code{\link{hill.adapt}}
 #'
 #' @export
@@ -1563,9 +1573,15 @@ predict.hill <- function(object, newdata = NULL, type = "quantile", input = NULL
 #'   \item{quantiles}{the estimted quantiles assiociated to newdata.}
 #'   \item{survival}{the estimated survival function assiociated to newdata.}
 #'
+#' @references
+#'
+#' Durrieu, G. and Grama, I. and Jaunatre, K. and Pham, Q.-K. and Tricot, J.-M. (2018). extremefit: A Package for Extreme Quantiles. Journal of Statistical Software, 87, 1--20.
+#'
+#'
 #' @seealso \code{\link{hill.ts}}
 #'
 #' @export
+#'
 #'
 #' @examples
 #' #Generate a pareto mixture sample of size n with a time varying parameter

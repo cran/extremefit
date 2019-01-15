@@ -1,4 +1,4 @@
-2c59ef86dfb3c4c7e84080f03e0f2a48 *DESCRIPTION
+9c85c25d0fe65663e4b52dad3ba3ee4c *DESCRIPTION
 b826d9edfb86c769f8ea7def30735244 *NAMESPACE
 11805f8330aa36975f71e452a1f4031d *R/PackageOxygen.R
 a0555dbb6dd7fe3218baa2bbf8b383cf *build/vignette.rds
@@ -8,7 +8,7 @@ a2da9795173b08fe9c8b8e3151271eb2 *data/dataOyster.rda
 7af1879c022a7a3a94cc7ea934cef8bc *data/datalist
 7058a0413bd940e0a5516dcdc4c45991 *inst/CITATION
 a1f14a7c60d28de8d38e6c9265634057 *inst/doc/extremefit.ltx
-3377b4991369b4f32e8181b97a1ce919 *inst/doc/extremefit.pdf
+4cb0763a26f96188d4e5b8cbbe6574e0 *inst/doc/extremefit.pdf
 a912c8e49533483809f97def8a4d16f7 *man/Biweight.kernel.Rd
 576cae3c1cb9081784bbc96ca99834fb *man/Burr-Distribution.Rd
 5d2f3dc6f8aa84e0b4596d40a356b31e *man/CriticalValue.Rd

@@ -2592,9 +2592,15 @@ rparetoCP <- function(n, a0 = 1, a1 = 2, x0 = 1, x1 = 6){
 #'
 #' The cumulative Pareto distribution is
 #' \deqn{
-#'   F(x) = 1- ((x-loc)/scale) ^ {-1/a},  x > 0,  a > 0, scale > 0
+#'   F(x) = 1- ((x-loc)/scale) ^ {-a},  x > loc,  a > 0, scale > 0
 #' }
 #' where \eqn{a} is the shape of the distribution.
+#'
+#' The density of the Pareto distribution is
+#'
+#' \deqn{
+#'   f(x) = (((x-loc)/scale)^( - a - 1) * a/scale) * (x-loc >= scale),  x > loc,  a > 0, scale > 0
+#' }
 #'
 #' @return dpareto gives the density, ppareto gives the distribution function, qpareto gives the quantile function, and rpareto generates random deviates.
 #'
@@ -2630,7 +2636,7 @@ dpareto  <-  function(x,  a = 1,  loc = 0,  scale = 1)
 {
   #a = invpow = 1/pow
 
-  (((x-loc)/scale)^( - a - 1)*a/scale)*(x-loc >= 1)
+  (((x-loc)/scale)^( - a - 1)*a/scale)*(x-loc >= scale)
 }
 
 #' @rdname Pareto-Distribution

@@ -1,6 +1,6 @@
-9c85c25d0fe65663e4b52dad3ba3ee4c *DESCRIPTION
+0cec30a1d908bbd883c27d9f330df8b3 *DESCRIPTION
 b826d9edfb86c769f8ea7def30735244 *NAMESPACE
-11805f8330aa36975f71e452a1f4031d *R/PackageOxygen.R
+8a03f25cad9b14200a54b6c20054e395 *R/PackageOxygen.R
 a0555dbb6dd7fe3218baa2bbf8b383cf *build/vignette.rds
 ff2a4baa88c685faac6c9a483a6b56bc *data/LoadCurve.rda
 a2da9795173b08fe9c8b8e3151271eb2 *data/dataOyster.rda
@@ -8,14 +8,14 @@ a2da9795173b08fe9c8b8e3151271eb2 *data/dataOyster.rda
 7af1879c022a7a3a94cc7ea934cef8bc *data/datalist
 7058a0413bd940e0a5516dcdc4c45991 *inst/CITATION
 a1f14a7c60d28de8d38e6c9265634057 *inst/doc/extremefit.ltx
-4cb0763a26f96188d4e5b8cbbe6574e0 *inst/doc/extremefit.pdf
+ce507563822217163ee18484a7d0077f *inst/doc/extremefit.pdf
 a912c8e49533483809f97def8a4d16f7 *man/Biweight.kernel.Rd
 576cae3c1cb9081784bbc96ca99834fb *man/Burr-Distribution.Rd
 5d2f3dc6f8aa84e0b4596d40a356b31e *man/CriticalValue.Rd
 08f3384876aee26aeec86f952c698a45 *man/Epa.kernel.Rd
 5ec6b428b637fd498c5acf6f1981d452 *man/Gaussian.kernel.Rd
 4a89e92ad1f8d64b7d017805ea8111cc *man/LoadCurve.Rd
-aad0ad1980b84370ea8dc97a6c61163f *man/Pareto-Distribution.Rd
+c2db7ed5bd40fd4543709d838f75d0a0 *man/Pareto-Distribution.Rd
 e207261808c45a9cbd96578c27bda726 *man/Pareto-mix.Rd
 237f40cfd818c1c9b9496bdb3aacb666 *man/Rectangular.kernel.Rd
 765466f8ec8dc663b1dc87017f478cc6 *man/Triang.kernel.Rd

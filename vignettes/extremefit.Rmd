@@ -1,0 +1,929 @@
+---
+title: "Extremefit"
+author: "Kevin Jaunatre"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+%\VignetteIndexEntry{Estimation of extreme quantiles and probabilities of rare events}
+%\VignetteEngine{knitr::rmarkdown}
+\usepackage[utf8]{inputenc}
+---
+
+
+
+\documentclass[nojss]{jss}
+\usepackage{thumbpdf,lmodern} 
+\graphicspath{{figure/}}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbold}
+
+\author{Gilles Durrieu\\ Universit\'e de Bretagne Sud \And Ion Grama\\
+  Universit\'e de Bretagne Sud \And Kevin Jaunatre\\ Universit\'e de
+  Bretagne Sud \AND Quang-Khoai Pham\\ University of Hanoi \And
+  Jean-Marie Tricot\\Universit\'e de Bretagne Sud}
+
+
+\title{\pkg{extremefit}: A Package for Extreme Quantiles}
+
+\Plainauthor{Gilles Durrieu, Ion Grama, Kevin Jaunatre, Quang-Khoai Pham, Jean-Marie Tricot} 
+
+\Plaintitle{\pkg{extremefit}: A Package for Extreme Quantiles} 
+
+\Abstract{\pkg{extremefit} is a package to estimate the extreme
+  quantiles and probabilities of rare events. The idea of our approach
+  is to adjust the tail of the distribution function over a threshold
+  with a Pareto distribution. We propose a pointwise data driven
+  procedure to choose the threshold. To illustrate the method, we use
+  simulated data sets and three real-world data sets included
+  in the package. We refer to the original paper published in Journal of Statistical Software \cite{Durrieu2018}.}
+
+\Keywords{nonparametric estimation, tail conditional probabilities, extreme conditional quantile, adaptive estimation, application, case study}
+
+%% \Volume{50}
+%% \Issue{9}
+%% \Month{June}
+%% \Year{2012}
+%% \Submitdate{2012-06-04}
+%% \Acceptdate{2012-06-04}
+
+\Address{
+Gilles Durrieu, Ion Grama, Kevin Jaunatre, Jean-Marie Tricot \\
+Laboratoire de Math\'ematiques de Bretagne Atlantique \\
+Universit\'e de Bretagne Sud and UMR CNRS 6205 \\
+Campus de Tohannic, BP573, 56000 Vannes, France \\
+Email : \email{gilles.durrieu@univ-ubs.fr}, \email{ion.grama@univ-ubs.fr},\\
+\email{kevin.jaunatre@univ-ubs.fr}, \email{jean-marie.tricot@univ-ubs.fr} \\
+\\
+Quang-Khoai Pham \\
+Department of Mathematics \\
+Forestry University of Hanoi\\
+Hanoi, Vietnam \\
+Email :  \email{quangkhoaihd@gmail.com}
+}
+
+\begin{document}
+
+
+\section{Introduction}\label{Introduction}
+ 
+Extreme values investigation plays an important role in several
+practical domains of applications, such as insurance, biology and
+geology. For example, in \cite{Buishand2008}, the authors study
+extremes to determine how severe rainfall periods occur in North
+Holland. \cite{sharma1999} use an extreme values procedure to predict
+violations of air quality standards. Various applications were
+presented in a lot of areas such as hydrology \citep{DavisonSmith1990,
+  katz2002}, insurance \citep{mcneil1997, rootzen1997} or finance
+\citep{danielsson1997, mcneil1998, embrechts1999, gencay2004}. Other
+applications range from rainfall data \citep{Gardes2010} to earthquake
+analysis \citep{sornette1996}. The extreme value theory consists of using
+appropriate statistical models to estimate extreme quantiles and
+probabilities of rare events.
+
+The idea of the approach implemented in the \proglang{R} \citep{Rsoft}
+package \pkg{extremefit} \citep{extremefit}, which is available from
+the Comprehensive \proglang{R} Archive Network (CRAN) at
+\url{https://CRAN.R-project.org/package=extremefit}, is to fit a
+Pareto distribution to the data over a threshold $\tau$ using the
+peak-over-threshold method.
+%The choice of the threshold $\tau$ is a challenging problem. 
+The choice of $\tau$ is a challenging problem, a large value can lead
+to an important variability while a small value may increase the bias.
+We refer to \cite{HallP1985}, \cite{DreesKaufmann1998},
+\cite{GuillouHall2001}, \cite{Huisman2001}, \cite{BeirlantAl2004},
+\cite{GramaSpokoiny2008, Grama2007} and \cite{ElMethniAl2012} where
+several procedures for choosing the threshold $\tau$ have been
+proposed.  Here, we adopt the method from \cite{GramaSpokoiny2008} and
+\cite{DGPT2015}.  The package \pkg{extremefit} includes the modeling
+of time dependent data. The analysis of time series involves a
+bandwidth parameter $h$ whose data driven choice is non-trivial.  We
+refer to \cite{Staniswalis1989} and \cite{loader2006} for the choice
+of the bandwidth in a nonparametric regression.  For the purposes of
+extreme value modeling, we use a cross-validation approach from
+\cite{DGPT2015}.
+
+The \pkg{extremefit} package is based on the methodology described in
+\cite{DGPT2015}.  The package performs a nonparametric estimation of
+extreme quantiles and probabilities of rare events. It proposes a
+pointwise choice of the threshold $\tau$ and, for time series, a
+global choice of the bandwidth $h$ and it provides graphical
+representations of the results.
+
+The paper is organized as follows. Section~\ref{ExtPack} gives an
+overview of several existing \proglang{R} packages dealing with
+extreme value analysis.  In Section~\ref{Model}, we describe the model
+and the estimation of the parameters, including the threshold $\tau$
+and the bandwidth $h$ choices.  Section~\ref{PackSim} contains a
+simulation study whose aim is to illustrate the performance of our
+approach.  In Section~\ref{app}, we give several applications on real
+data sets and we conclude in Section~\ref{conclusion}.
+
+\section{Extreme value packages}\label{ExtPack}
+
+There exist several \proglang{R} packages dealing with the extreme
+value analysis.  We give a short description of some of them. For a
+detailed description of these packages, we refer to
+\cite{Gilleland2013}.  There also exists a CRAN Task View on extreme
+value analysis which gives a description of registered packages
+available on CRAN \citep{Extreme-Value-view}. Among those available
+packages, the well known peak-over-threshold method, we mentioned
+before, has many implementations, e.g., in the \pkg{POT} package
+\citep{POT}.
+
+Some of the packages have a specific use, such as the package
+\pkg{SpatialExtremes} \citep{SpatialExtremes}, which models spatial
+extremes and provides maximum likelihood estimation, Bayesian
+hierarchical and copula modeling, or the package \pkg{fExtremes}
+\citep{fExtremes} for financial purposes using functions from the
+packages \pkg{evd} \citep{evd}, \pkg{evir} \citep{evir} and others.
+
+The \pkg{copula} package \citep{copula} provides tools for exploring
+and modeling dependent data using copulas.  The \pkg{evd} package
+provides both block maxima and peak-over-threshold computations based
+on maximum likelihood estimation in the univariate and bivariate
+cases. The \pkg{evdbayes} package \citep{evdbayes} provides an
+extension of the \pkg{evd} package using Bayesian statistical methods
+for univariate extreme value models. The package \pkg{extRemes}
+\citep{extRemes} implements also univariate estimation of block maxima
+and peak-over-threshold by maximum likelihood estimation allowing for
+non-stationarity. The package \pkg{evir} is based on fitting a
+generalized Pareto distribution with the Hill estimator over a given
+threshold. The package \pkg{lmom} \citep{lmom} is dealing with
+L-moments to estimate the parameters of extreme value distributions
+and quantile estimations for reliability or survival analysis.  The
+package \pkg{texmex} \citep{texmex} provides statistical extreme value
+modeling of threshold excesses, maxima and multivariate extremes,
+including maximum likelihood and Bayesian estimation of parameters.
+  
+In contrast to previous described packages, the \pkg{extremefit}
+package provides tools for modeling heavy tail distributions without
+assuming a general parametric structure. The idea is to fit a
+parametric Pareto model to the tail of the unknown distribution over
+some threshold.  The remaining part of the distribution is estimated
+nonparametrically and a data driven algorithm for choosing the
+threshold is proposed in Section~\ref{Threshold}.  We also provide a
+version of this method for analyzing extreme values of a time series
+based on the nonparametric kernel function estimation approach.  A
+data driven choice of the bandwidth parameter is given in
+Section~\ref{bandwidth}.  These estimators are studied in more details
+in \cite{DGPT2015}.
+
+
+\section{Extreme value prediction using a semi-parametric model}\label{Model}
+
+\subsection{Model and estimator}\label{ModelEstimator}
+
+We consider $F_t(x) = \Prob(X\leq x | T=t)$ the conditional distribution of a random variable $X$ given a time covariate $T=t$, where $x \in [x_0, \infty )$ and $t \in [0,T_{\max}]$.
+We observe independent random variables $X_{t_{1}},\ldots,X_{t_{n}}$ associated to a sequence of times $0\leq t_{1}<\ldots<t_{n}\leq T_{\max}$, such that 
+for each $t_i$, the random variable $X_{t_i}$ has the distribution function $F_{t_i}$. 
+The purpose of the \pkg{extremefit} package is to provide a pointwise estimation of the tail probability 
+$S_{t}\left( x\right) =1-F_{t}\left(x\right) $ 
+and the extreme $p$~quantile $F_{t}^{-1}\left( p\right) $ functions for any $t \in [0,T_{\max}]$, given $x>x_{0}$ and $p\in (0,1)$. 
+We assume that $F_t$ is in the domain of attraction of the Fr\'echet distribution. The idea is to adjust, for some $\tau \geq x_0$, the excess distribution function
+\begin{equation}\label{excess d.f.}
+F_{t,\tau }\left( x\right) =1-\frac{1-F_{t}\left( x\right) }{1-F_{t}\left(\tau \right) },\;\;\;\;x\in \lbrack \tau ,\infty ) 
+\end{equation}%
+by a Pareto distribution:
+\begin{equation}
+G_{\tau ,\theta }\left( x\right) =1-\left( \frac{x}{\tau }\right) ^{-\frac{1}{\theta }},\;\;\;\;x\in \lbrack \tau ,\infty ),  \label{pareto 001}
+\end{equation}%
+where $\theta > 0$ and $\tau \geq x_0$ an unknown threshold, depending on
+$t$.  The justification of this approach is given by the
+Fisher-Tippett-Gnedenko theorem \citep[][Theorem
+2.1]{BeirlantAl2004} which states that $F_t$ is in the domain of
+attraction of the Fr\'echet distribution if and only if
+$1-F_{t,\tau}(\tau x)\rightarrow x^{-1/\theta}$ as
+$\tau \rightarrow \infty$.  This consideration is based on the
+peak-over-threshold (POT) approach \citep{BeirlantAl2004}.  We
+consider the semi-parametric model defined by:
+\begin{equation}
+F_{t,\tau ,\theta }\left( x\right) =\left\{
+\begin{array}{cl}
+F_{t}\left( x\right) & \text{if\ \ }x\in \lbrack x_{0},\tau ], \\
+1-\left( 1-F_{t}\left( \tau \right) \right) \left( 1-G_{\tau ,\theta }\left(
+x\right) \right) & \text{if\ \ }x>\tau ,%
+\end{array}%
+\right.  \label{eq003}
+\end{equation}%
+where $\tau \geq x_0$ is the threshold parameter. We propose in the
+sequel how to estimate $F_t$ and $\theta$ which are unknown in
+(\ref{eq003}).
+
+
+The estimator of $F_{t}(x)$ is taken as the weighted empirical distribution given by
+\begin{equation}
+\widehat{F}_{t,h}\left( x\right) =\frac{1}{\sum_{j=1}^{n}W_{t,h}(t_{j})}
+\sum_{i=1}^{n}W_{t,h}(t_{i})\mathbb{1}_{\{X_{t_{i}}\leq x\}},
+\label{WDF}
+\end{equation}
+where, for $i=1,\ldots,n$,
+$W_{t,h}(t_{i})=K\left( \frac{t_{i}-t}{h}\right)$ are the weights and
+$K(\cdot)$ is a kernel function assumed to be continuous,
+non-negative, symmetric with support on the real line such that
+$K(x) \leq 1$, and $h>0$ is a bandwidth.
+
+
+By maximizing the weighted quasi-log-likelihood function
+\citep[see][]{DGPT2015,Staniswalis1989,loader2006}
+\begin{equation}
+\mathcal{L}_{t,h}(\tau,\theta) = \sum_{i=1}^n W_{t,h}(t_i)\log \frac{dF_{t,\tau,\theta}}{dx}(X_{t_i})
+\end{equation}
+with respect to $\theta$, we obtain the estimator
+\begin{equation}
+\widehat{\theta }_{t,h,\tau }=\frac{1}{\widehat{n}_{t,h,\tau }}%
+\sum_{i=1}^{n}W_{t,h}(t_{i})\mathbb{1}_{\{X_{t_{i}}>\tau \}}\log \left( \frac{%
+X_{t_{i}}}{\tau }\right),  \label{eqn0018}
+\end{equation}%
+where
+$
+\widehat{n}_{t,h,\tau }=\sum_{i=1}^{n}W_{t,h}(t_{i})\mathbb{1}_{\{X_{t_{i}}>\tau \}}
+\label{n hat t h tau}
+$
+is the weighted number of observations over the threshold $\tau$.
+
+Plugging-in (\ref{WDF}) and (\ref{eqn0018}) in the semi-parametric model (\ref{eq003}), we obtain:
+\begin{equation}
+\widehat{F}_{t,h,\tau }\left( x\right) =\left\{
+\begin{array}{cl}
+\widehat{F}_{t,h}\left( x\right) & \text{if\ \ }x\in \lbrack x_{0},\tau ],
+\\
+1-\left( 1-\widehat{F}_{t,h}\left( \tau \right) \right) \left( 1- G_{\tau ,\widehat\theta_{t,h,\tau } }\left( x \right)\right) & \text{if\ \ }x>\tau .
+\end{array}
+\right.  \label{Est001}
+\end{equation}%
+
+For any $p \in (0,1)$, the estimator of the $p$~quantile of $X_t$ is defined by 
+\begin{equation}
+\widehat{q}_{p}(t,h) = \left\{
+\begin{array}{cc}
+\widehat{F}_{t,h}^{-1}\left( p\right) & \text{if\ \ \ \ }p<\widehat{p}_{\tau
+}, \\
+\tau \left( \frac{1-\widehat{p}_{\tau }}{1-p}\right) ^{\widehat{\theta }%
+_{t,h,\tau }} & \text{otherwise,}%
+\end{array}%
+\right.  \label{QuantEstimator}
+\end{equation}%
+where $\widehat p_\tau = \widehat{F}_{t,h}\left( \tau \right)$. 
+
+\subsection{Selection of the threshold} \label{Threshold}
+
+
+The determination of the threshold $\tau$ in model (\ref{Model}) is
+based on a testing procedure which is a goodness-of-fit test for the
+parametric-based part of the model. At each step of the procedure, the
+tail adjustment to a Pareto distribution is tested based on $k$ upper
+statistics. If it is not rejected, the number $k$ of upper statistics
+is increased and the tail adjustment is tested again until it is
+rejected. If the test rejects the parametric tail fit from the very
+beginning, the Pareto tail adjustment is not significant. On the other
+hand, if all the tests accept the parametric Pareto fit then the
+underlying distribution $F_{t,\tau ,\theta }$ follows a Pareto distribution $G_{\tau ,\theta }$.  The critical value
+denoted by $D$ depends on the kernel choice and is determined by
+Monte-Carlo simulation, using the \code{CriticalValue} function of the
+package.
+
+ 
+In Table~\ref{kernel}, we display the critical values using \code{CriticalValue} obtained for several kernel functions.
+
+
+\begin{table}[t!]
+\centering
+\begin{tabular}{lcl}
+\hline
+  Kernel & $D$ & $K(x)$\\
+  \hline
+  Biweight & $7$ & $\frac{15}{16}(1-x^2)^2 \mathbb{1}_{|x|\leq1}$\\[0.1cm]
+  Epanechnikov & $6.1$ & $\frac{3}{4}(1-x^2)\mathbb{1}_{|x|\leq1}$\\[0.1cm]
+%  Gaussian & $2.7$ & $\frac{1}{\sqrt{2\pi}}e^{-\frac{(3x)^2}{2}}\mathbb{1}_{|x|\leq1}$\\[0.1cm]
+  Rectangular & $10.0$ & $\mathbb{1}_{|x|\leq1}$\\[0.1cm]
+  Triangular & $6.9$ & $(1-|x|)\mathbb{1}_{|x|\leq1}$\\[0.1cm]
+  Truncated  Gaussian, $\sigma=1/3$  & $8.3$ & $\frac{3}{\sqrt{2\pi}}\exp(-\frac{(3x)^2}{2})\mathbb{1}_{|x|\leq1}$\\
+  Truncated Gaussian, $\sigma=1$ & $3.4$ & $\frac{1}{\sqrt{2\pi}}\exp\left (-\frac{x^2}{2}\right )\mathbb{1}_{|x|\leq1}$\\
+  \hline
+\end{tabular}
+\caption{Critical values associated with kernel functions. The Gaussian kernel with standard deviation $1/3$ is approximated 
+by the truncated Gaussian kernel $\frac{1}{\sqrt{2\pi}\sigma}\exp\left (-\frac{x^2}{2\sigma^2}\right )\mathbb{1}_{|x|\leq1}$  
+with $\sigma=1/3$.}
+\label{kernel}
+\end{table}
+
+The default values of the parameters in the algorithm yielded satisfying
+estimation results in a simulation study without being time-consuming
+even for large data sets. The choice of these tuning parameters is
+explained in \cite{DGPT2015}.
+
+The following commands compute the critical value $D$ for the
+truncated Gaussian kernel with $\sigma=1$ (default value) and display
+the empirical distribution function of the goodness-of-fit test
+statistic which determines the threshold $\tau$. The parameters $n$
+and $N_{\mathit{MC}}$ define respectively the sample size and the number of
+Monte-Carlo simulated samples.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> library("extremefit")
+R> set.seed(3110)  
+R> n <- 1000 
+R> NMC <- 500 
+R> CriticalValue(NMC, n, TruncGauss.kernel, prob = 0.99, plot = TRUE) 
+\end{Sinput}
+\begin{Soutput}
+[1] 3.272382
+\end{Soutput} 
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{ts.pdf}
+\caption{Empirical distribution function of the test statistic for the
+  truncated Gaussian kernel with $N_{\mathit{MC}}=1000$ Monte-Carlo samples of
+  size $n=500$. The vertical dashed line represents the critical value
+  ($D=3.4$) corresponding to the 0.99-empirical quantile of the test
+  statistic.}
+\label{TS}
+\end{figure}
+
+For a given $t$, the function \code{hill.adapt} allows a data driven
+choice of the threshold $\tau$ and the estimation of $\theta_t$.
+
+\subsection{Selection of the bandwidth $h$}\label{bandwidth}
+
+We determine the bandwidth $h$ by cross-validation from a sequence of
+the form $h_l=aq^l,$ $l=0,\dots,M_h$ with
+$q=\exp\left( \frac{\log b - \log a }{M_h} \right) $, where $a$ is the
+minimum bandwidth of the sequence, $b$ is the maximum bandwidth of the
+sequence and $M_h$ is the length of the sequence.  The choice is
+performed globally on the grid $T_{\text{grid}}= \{ t_1,\dots,t_K\}$ of
+points $t_i \in [0,T_{\max}]$, where the number $K$ of the points on
+the grid is defined by the user.  The choice $K=n$ is possible but can
+be time consuming for large samples. We recommend to use a fraction of
+$n.$
+
+We choose $h_{cv}$ by minimizing in $h_m,$ $m=1,\dots,M_h$ the cross-validation function
+\begin{equation}
+CV(h_m,p_{cv}) = \frac{1}{ M_h \mbox{card} ( T_{\text{grid}} )  }\sum_{h_l}   \sum_{t_i \in T_{\text{grid}}} 
+\left| \log   \frac { \widehat{q}^{(-i)}_{p_{cv}} (t_i,h_m)} { \widehat{F}_{t_i,h_l}^{-1}\left( p_{cv}\right)  }   \right|,
+\label{CV_function}
+\end{equation}
+where $ \widehat{F}_{t_i,h_l}^{-1}\left( p_{cv}\right)$ is the
+empirical quantile from the observations in the window
+$[t_i-h_l,t_i+h_l]$, $\widehat{q}^{(-i)}_{p_{cv}} (t_i,h_m )$ is the
+quantile estimator inside the window $[t_i-h_m,t_i+h_m]$ defined by
+(\ref{QuantEstimator}) with the observation $X_{t_i}$ removed and
+$\tau$ being the adaptive threshold given by the remaining
+observations inside the window $[t_i-h_m,t_i+h_m]$. The function
+\code{bandwidth.CV} selects the bandwidth $h$ by cross-validation.
+
+\section{Package presentation on simulated data}\label{PackSim}
+
+In this section, we demonstrate the \pkg{extremefit} package by
+applying it to two simulated data sets.
+
+The following code displays the computation of the survival
+probabilities and quantiles using the adaptive choice of the threshold
+provided by the \code{hill.adapt} function.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> set.seed(5)
+R> X <- abs(rcauchy(200))
+R> n <- 100
+R> HA <- hill.adapt(X)
+R> predict(HA, newdata = c(3, 5, 7), type = "survival")$p
+\end{Sinput}
+\begin{Soutput}
+[1] 0.2037851 0.1137516 0.0774763
+\end{Soutput}
+\begin{Sinput}
+R> predict(HA, newdata = c(0.9, 0.99, 0.999, 0.9999), type = "quantile")$y
+\end{Sinput}
+\begin{Soutput}
+[1]    5.597522   42.084647  316.410998 2378.917884
+\end{Soutput}  
+\end{Schunk}
+%
+A simple use of the method described in Section~\ref{Model} is given by the following example. 
+With $t_i=i/n$, we consider data $X_{t_1},\dots,X_{t_n}$ generated by the Pareto change-point model defined by
+\begin{equation}
+F_t(x) = \left(1-x^{-1/2\theta_t} \right) \mathbb{1}_{x\leq \tau} + \left(1-x^{-1/\theta_t} \tau^{1/2\theta_t} \right) \mathbb{1}_{x > \tau},
+\label{ParCP}
+\end{equation}
+where $\theta_{t}$ is a time varying parameter depending on
+$t \in [0,1]$ defined by $\theta_t = 0.5+0.25\sin(2\pi t)$ and
+$\tau = 3$ as described in \cite{DGPT2015}. We consider the sample
+size $n=50000$. The following commands generate one sample from model
+(\ref{ParCP}).
+%
+\begin{Schunk}
+\begin{Sinput}
+R> set.seed(5)
+R> n <- 50000; tau <- 3
+R> theta <- function(t){0.5 + 0.25 * sin(2 * pi * t)}
+R> Ti <- 1:n / n; Theta <- theta(Ti)
+R> X <- rparetoCP(n, a0 = 1 / (Theta * 2), a1 = 1 / Theta, x1 = tau)
+\end{Sinput}
+\end{Schunk}
+%
+The \pkg{extremefit} package provides the estimates of $\theta_{t}$, $q_{p}(t,h)$ and $F_{t}\left( x\right)$ for large values of $x$ particularly. We select the bandwidth $h_{cv}$ by minimizing the cross-validation function implemented in \code{bandwidth.CV}. The weights are computed using the truncated Gaussian kernel ($\sigma=1$), which is implemented in \code{TruncGauss.kernel}. This kernel implies $D=3.4$. 
+To select the bandwidth $h_{cv}$, we define a grid of possible values of $h$ as indicated in Section~\ref{bandwidth} with $a=0.005$, $b=0.05$ and $M_h=20$. Moreover, we fix the parameter $p_{cv} = 0.99.$ The parameter $T_{\text{grid}}$ defines a grid of $t \in T_{\text{grid}}$ to perform the cross-validation.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> a <- 0.005; b <- 0.05; Mh <- 20
+R> hl <- bandwidth.grid(a, b, Mh, type = "geometric")
+R> Tgrid <- seq(0, 1, 0.02)
+R> Hcv <- bandwidth.CV(X, Ti, Tgrid, hl, pcv = 0.99,  
++    kernel = TruncGauss.kernel, CritVal = 3.4, plot = FALSE)
+R> Hcv$h.cv
+\end{Sinput}
+\begin{Soutput}
+[1] 0.02727797
+\end{Soutput}
+\end{Schunk}
+%
+For each $t \in
+T_{\text{grid}}$, we determine the data driven threshold
+$\tau$ and the estimates $\widehat
+\theta_{t,h_{cv},\tau}$ using the function \code{hill.ts}.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> Tgrid <- seq(0, 1, 0.01)
+R> hillTs <- hill.ts(X, Ti, Tgrid, h = Hcv$h.cv, 
++    kernel = TruncGauss.kernel, CritVal = 3.4)
+\end{Sinput}
+\end{Schunk}
+%
+For each $t \in T_{\text{grid}}$, we display $\widehat \theta_{t,h_{cv},\tau}$   and the true value $\theta_t = 0.5+0.25\sin(2\pi t)$  in Figure~\ref{ThetEs}.
+%used to generate data from the model (\ref{ParCP}).
+%
+\begin{Schunk}
+\begin{Sinput}
+R> plot(Tgrid, hillTs$Theta)
+R> lines(Ti, Theta, col = "red")
+\end{Sinput}
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{ThetaEst.pdf}
+\caption{Plot of  the  $\theta_t$ estimate $\widehat \theta_{t,h_{cv},\tau}$ (black dots)  and  the true $\theta_t$ (red line)  for each $t \in T_{\text{grid}}$.}
+\label{ThetEs}
+\end{figure}
+
+The estimates of the quantiles and the survival probabilities are
+determined using the \proglang{S}3 method \code{predict} for
+`\code{hill.ts}' objects. For instance the estimate of the
+$p$~quantile $F_{t}^{-1}\left( p\right)
+$ %quantiles $\widehat{q}_{p}(t,h_{cv})$
+of order $p= 0.99$ and
+$p=0.999$ are computed with the following \proglang{R} commands:
+
+%
+\begin{Schunk}
+\begin{Sinput}
+R> p <- c(0.99, 0.999)
+R> PredQuant <- predict(hillTs, newdata = p, type = "quantile")
+\end{Sinput}
+\end{Schunk}
+%
+Figure~\ref{qEst} displays the true and the estimated quantiles of
+order $p=0.99$ and $p=0.999$ of the Pareto change-point distribution
+defined by (\ref{ParCP}). The true quantiles can be accessed with the
+\code{qparetoCP} function.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> TrueQuant <- matrix(0, ncol = 2, nrow = n)
+R> for (i in 1:length(p)) {
++    TrueQuant[, i] <- qparetoCP(p[i], a0 = 1 / (Theta * 2), 
++      a1 = 1 / Theta, x1 = tau)
++  }
+R> plot(Tgrid, log(as.numeric(PredQuant$y[1, ])), ylim = c(1.5, 6.3), 
++    ylab = "estimated log-quantiles")
+R> points(Tgrid, log(as.numeric(PredQuant$y[2, ])), pch = "+")
+R> lines(Ti, log(TrueQuant[,1]))
+R> lines(Ti, log(TrueQuant[,2]), col = "red")
+\end{Sinput}
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{quantCP.pdf}
+   \caption{Plot of the true log quantiles $F^{-1}_t(p)$ with $p=0.99$ (black line) and $p=0.999$ (red line) 
+   and the corresponding estimated quantiles with $p=0.99$ (black dots)  and $p=0.999$ (black cross) as function of $t \in T_{\text{grid}}$.
+   %Estimation of the 0.99-quantile (black dots), 0.999-quantile (black cross) and the true value of the 0.99-quantile (black line) and 0.999-quantile (red line) over $t \in [0,1]$ %according to model (\ref{ParCP}).
+ }
+   \label{qEst}
+\end{figure}
+
+In the same way, we estimate for each $t \in T_{\text{grid}}$ the
+survival probabilities $S_t(x)=1-F_t(x).$ The \code{predict} method
+for `\code{hill.ts}' objects with the option \code{type = "survival"}
+computes the estimated survival function for a given $x.$ For each
+$t \in T_{\text{grid}}$, the following commands compute the estimate
+of $S_t(x)$ for $x=20$ and $x=30.$
+%
+\begin{Schunk}
+\begin{Sinput}
+R> x <- c(20, 30)
+R> PredSurv <- predict(hillTs, newdata = x, type = "survival")
+R> TrueSurv <- matrix(0, ncol = 2, nrow = n)
+R> for (i in 1:length(x)) {
++    TrueSurv[, i] <- 1 - pparetoCP(x[i], a0 = 1 / (Theta * 2), 
++      a1 = 1 / Theta, x1 = tau)
++  }  
+R> plot(Tgrid, as.numeric(PredSurv$p[1, ]), 
++    ylab = "estimated survival probabilities")
+R> points(Tgrid, as.numeric(PredSurv$p[2,]), pch = "+")
+R> lines(Ti, TrueSurv[, 1])
+R> lines(Ti, TrueSurv[, 2], col = "red")
+\end{Sinput}
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{SEst.pdf}
+\caption{Plot of the true survival probabilities $S_t(x)$ at $x=20$
+  (black line) and $x=30$ (red line) and the corresponding estimated
+  survival probabilities at $x=20$ (black dots) and $x=30$ (black
+  cross) as function of $t \in T_{\text{grid}}$.  }
+\label{sEst}
+\end{figure}
+
+The estimations of the quantile and the survival function displayed in
+Figures~\ref{qEst} and~\ref{sEst} have been performed for one sample.
+Now we analyze the performance of the quantile estimator via a
+Monte-Carlo study. We obtain in Figure~\ref{quant0.99} satisfying
+results on a simulation study using $N_{\mathit{MC}}=1000$ Monte-Carlo
+replicates. The iteration of the previous \proglang{R} commands on
+$N_{\mathit{MC}}=1000$ simulations are not given because of the
+computation time.
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{quant99.pdf}
+\caption{Boxplots of the log $\widehat{q}_{0.99}(t,h_{cv})$ adaptive
+  estimators with bandwidth $h_{cv}$ chosen by cross-validation and
+  $t \in T_{\text{grid}}.$ %for the model~\ref{ParCP}.
+  The true log 0.99-quantile is plotted as a red line.}
+\label{quant0.99}
+\end{figure}
+
+\newpage
+\section{Real-world data sets}\label{app}
+
+\subsection{Wind data}
+
+The wind is mainly studied in the framework of an alternative to fossil
+energy. Studies of wind speed in extreme value theory were made to
+model wind storm losses or detect areas which can be subject to
+hurricanes \citep[see][]{rootzen1997,simiu1996}.
+
+The wind data in the package \pkg{extremefit} comes from the Airport of
+Brest (France) and represents the average wind speed per day from 1976
+to 2005. The data set is included in the package \pkg{extremefit} and
+can be loaded by the following code.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> data("dataWind", package = "extremefit")
+R> attach(dataWind)
+\end{Sinput}
+\end{Schunk}
+%
+The commands below illustrate the function \code{hill.adapt} on the
+wind data set and computes a monthly estimation of the survival
+probabilities $1-\widehat{F}_{t,h,\tau }\left( x\right)$ for a given
+$x = 100$ km/h with the \code{predict} method for `\code{hill.adapt}'
+objects.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> pred <- vector("numeric", 12)
+R> for (m in 1:12) {
++    indices <- which(Month == m)
++    X <- Speed[indices] * 60 * 60 / 1000
++    H <- hill.adapt(X)
++    pred[m] <- predict(H, newdata = 100, type = "survival")$p
++  }
+R> plot(pred, ylab = "Estimated survival probability", xlab = "Month")
+\end{Sinput}
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 40, clip]{wind.pdf}
+   \caption{Plot of the estimated survival probability $1-\widehat{F}_{t,h,\tau }\left( x\right)$ at $x=100$ km/h.}
+   \label{wind}
+\end{figure}
+
+
+\subsection{Sea shores water quality}
+
+The study of the pollution in the aquatic environment is an important
+problem. Humans tend to pollute the environment through their
+activities and the water quality survey is necessary for
+monitoring. The bivalve's activity is investigated by modeling the
+valve movements using high frequency valvometry. The electronic
+equipment is described in \cite{TranAl2003} and modified by
+\cite{Chambon2007}. More information can be found at
+\url{http://molluscan-eye.epoc.u-bordeaux1.fr/}.
+
+High-frequency data (10 Hz) are produced by noninvasive valvometric
+techniques and the study of the bivalve's behavior in their natural
+habitat leads to the proposal of several statistical models
+\citep{MS11, Schmitt2011, Jou2006, CoudretAl2013, Az2014, DGPT2015,
+  durrieu2016dynamic}.  It is observed that in the presence of a
+pollutant, the activity of the bivalves is modified and consequently
+they can be used as bioindicators to detect perturbations in aquatic
+systems (pollutions, global warming). A group of oysters {\it
+  Crassostrea gigas} of the same age are installed around the world
+but we concentrate on the Locmariaquer site (GPS coordinates
+$47^{\circ}34$ N, $2^{\circ}56$ W) in France. The oysters are placed
+in a traditional oyster bag. In the package \pkg{extremefit}, we
+provide a sample of the measurements for one oyster over one day. The
+data can be accessed by
+%
+\begin{Schunk}
+\begin{Sinput}
+R> data("dataOyster", package = "extremefit")
+\end{Sinput}
+\end{Schunk}
+%
+The description of the data can be found with the \proglang{R} command
+\code{help("dataOyster", package = "extremefit")}. The following code
+covers the velocities and the time covariate and also displays the
+data.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> Velocity <- dataOyster$data[, 3]
+R> time <- dataOyster$data[, 1]
+R> plot(time, Velocity, type = "l", xlab = "time (hour)", 
++    ylab = "Velocity (mm/s)")
+\end{Sinput}
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{Speed.pdf}
+   \caption{Plot of the velocity of the valve closing and opening over one day.}
+   \label{SpOy}
+\end{figure}
+
+We observe in Figure~\ref{SpOy} that the velocity is equal to zero in two periods of time. 
+To facilitate the study of these data, we have included a time grid where the intervals with null velocities are removed.
+The grid of time can be accessed by \code{dataOyster$Tgrid}. 
+We shift the data to be positive.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> new.Tgrid <- dataOyster$Tgrid 
+R> X <- Velocity + (-min(Velocity)) 
+\end{Sinput}
+\end{Schunk}
+%
+The bandwidth parameter is selected by the cross-validation method
+($h_{cv}=0.2981812$) using \code{bandwidth.CV} but we select it
+manually in the following command due to the long computation time.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> hcv <- 0.2981812
+R> TS.Oyster <- hill.ts(X ,t = time, new.Tgrid, h = hcv, 
++    TruncGauss.kernel, CritVal = 3.4)
+\end{Sinput}
+\end{Schunk}
+%
+The estimations of the extreme quantile of order $0.999$ and the
+probabilities of rare events are computed as described in
+Section~\ref{Threshold}. The critical value of the sequential test is
+$D = 3.4$ when considering a truncated Gaussian kernel, see
+Table~\ref{kernel}. A global study on a set of $16$ oysters on a $6$
+months period is given in \cite{DGPT2015}.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> pred.quant.Oyster <- predict(TS.Oyster, newdata = 0.999, 
++    type = "quantile")
+R> plot(time, Velocity, type = "l", ylim = c(-0.5, 1),
++    xlab = "Time (hour)", ylab = "Velocity (mm/s)")
+R> quant0.999 <- rep(0, length(seq(0, 24, 0.05)))
+R> quant0.999[match(new.Tgrid, seq(0, 24, 0.05))] <- 
++    as.numeric(pred.quant.Oyster$y) - (-min(Velocity))
+R> lines(seq(0, 24, 0.05), quant0.999, col = "red")
+\end{Sinput}
+\end{Schunk}
+%
+In \cite{DGPT2015} and \cite{durrieu2016dynamic}, we observe that
+valvometry using extreme value theory allows in real-time {\it in
+  situ} analysis of the bivalve behavior and appears as an effective
+early warning tool in ecological risk assessment and marine
+environment monitoring.
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{quantOys.pdf}
+\caption{Plot of the estimated 0.999-quantile (red line) and the velocities of valve closing (black lines).}
+\label{QuOys}
+\end{figure}
+
+
+\subsection{Electric consumption}
+
+Electric consumption is an important challenge due to population
+expansion and increasing needs in a lot of countries. Obviously this
+consumption is dealing with the state procurement policies. Therefore
+statistical models may give an understanding of electric
+consumption. Multiple models have been used to forecast the electric
+consumption, as regression and time series models \citep{bianco2009,
+  ranjan1999, harris1993, bercu2013sarimax}. \cite{durand2004analyse}
+used a hidden Markov model to forecast the electric consumption. 
+
+A research project conducted in France (Lorient, GPS coordinates
+$47^{\circ}45$ N, $3^{\circ}22$ W) concerns the measurements of
+electric consumption using Linky, a smart communica\-ting electric
+meter
+(\url{http://www.enedis.fr/linky-communicating-meter}). Installed in
+end-consumer's dwellings and linked to a supervision center, this
+meter is in constant interaction with the network. The Linky electric
+meter allows a measurement of the electric consumption every 10
+minutes.
+
+To prevent from major power outages, the SOLENN project
+(\url{http://www.smartgrid-solenn.fr/en/}) is testing an alternative
+to load shedding. Data of electric consumption are collected on
+selected dwellings to study the effect of a decrease on the maximal
+power limit. For example, an dwelling with a maximal electric power
+contract of $9$ kiloVolt ampere is decreased to $6$ kiloVolt
+ampere. This experiment enables to study the consumption of the
+dwelling with the application of an electric constraint related to the
+need of the network. For instance, after an incident such as a power
+outage on the electric network, the objective is to limit the number
+of dwellings without electricity. If during the time period where the
+electric constraint is applied, the electric consumption of the
+dwelling exceeds the restricted maximal power, the breaker cuts off
+and the dwelling has no more electricity. The consumer can, at that
+time, close the circuit breaker and gets the electricity back.  In any
+cases, at the end of the electric constraint, the network manager can
+close the breaker using the Linky electric meter which is connected to
+the network.  The control of the cutoff breakers is crucial to prevent
+a dissatisfaction of the customers and to detect which dwellings are
+at risk.
+
+The extreme value modeling approach described in Section~\ref{Model}
+was carried out on the electric consumption data for one dwelling from
+December 24, $2015$ to June 29, $2016$.  This data are available in
+the \pkg{extremefit} package and Figure~\ref{ElecEx} displays the
+electric consumption of one dwelling. This dwelling has a maximal
+power contract of $9$ kVA.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> data("LoadCurve", package = "extremefit")
+R> Date <- as.POSIXct(LoadCurve$data$Time * 86400, origin = "1970-01-01")
+R> plot(Date, LoadCurve$data$Value / 1000, type = "l", 
++    ylab = "Electric consumption (kVA)", xlab = "Date")
+\end{Sinput}
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{ConsEx.pdf}
+\caption{Electric consumption of one customer from December 24, $2015$ to June 29, $2016$.}
+\label{ElecEx}
+\end{figure}
+We consider the following grid of time $T_{\text{grid}}$:
+%
+\begin{Schunk}
+\begin{Sinput}
+R> Tgrid <- seq(min(LoadCurve$data$Time), max(LoadCurve$data$Time),
++    length = 400)
+\end{Sinput}
+\end{Schunk}
+%
+We observe in April 2016 missing values in Figure~\ref{ElecEx} due to
+a technical problem. We modify the grid of time by removing the
+intervals of $T_{\text{grid}}$ with no data.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> new.Tgrid <- LoadCurve$Tgrid
+\end{Sinput}
+\end{Schunk}
+%
+We choose the truncated Gaussian kernel and the associated critical
+value of the goodness-of-fit test is
+$D=3.4$ (see Table~\ref{kernel}). The bandwidth parameter is selected
+by the cross-validation method
+($h_{cv}=3.44$) using \code{bandwidth.CV} but we select it manually in
+the following command due to long computation time.
+%
+\begin{Schunk}
+\begin{Sinput}
+R> HH <- hill.ts(LoadCurve$data$Value, LoadCurve$data$Time, new.Tgrid,  
++    h = 3.44, kernel = TruncGauss.kernel, CritVal = 3.4)
+\end{Sinput}
+\end{Schunk}
+%
+To detect the probability to cut off the breaker, we compute for each time in the grid the estimates of the probability to exceed the maximal power of $9$kVA and of the extreme $0.99$-quantile. Figure~\ref{EcrQuant} displays the electric consumption during the period of study and the estimated quantile of order $0.99$. 
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{ConsExQuant.pdf}
+\caption{Plot of the estimated $0.99$-quantile (red line) for each time
+  from December 24, $2015$ to June 29, $2016$.}
+\label{EcrQuant}
+\end{figure}
+%
+\begin{Schunk}
+\begin{Sinput}
+R> Quant <- rep(NA, length(Tgrid))
+R> Quant[match(new.Tgrid,Tgrid)] <- as.numeric(predict(HH, 
++    newdata = 0.99, type = "quantile")$y)
+R> plot(Date, LoadCurve$data$Value/1000, ylim = c(0, 8),
++    type = "l", ylab = "Electric consumption (kVA)", xlab = "Time")
+R> lines(as.POSIXlt((Tgrid) * 86400, origin = "1970-01-01",
++    tz = "Europe/Paris"), Quant / 1000, col = "red")
+\end{Sinput}
+\end{Schunk}
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.65\textwidth, trim = 0 15 0 50, clip]{SurvEx.pdf}
+\caption{Plot of the estimated survival probability depending on the
+  time and the maximal power. The plus symbol corresponds to the
+  electric constraint period.}
+\label{EcrSurv}
+\end{figure}
+The plus symbol appears at the times when the maximal power was
+decreased corresponding to the 11th, 13th, 18th of January, the 25th
+of February and the 1st, 7th, 18th of March in 2016, with a
+respectively decrease to $6.3$, $4.5$, $4.5$, $4.5$, $3.6$, $2.7$ and
+$2.7$ kVA. Figure~\ref{EcrSurv} displays the estimated survival
+probability which depends on the time and the maximal power. We can
+observe that the survival probability is higher than usual during this
+period. Furthermore, we have the auxiliary information that this
+dwelling cuts off its breaker on every electric constraint period
+except the 11th of January, 2016.
+
+Using a prediction method coupled with the method implemented in the
+package \pkg{extremefit}, it will be possible to detect high
+probability of cutting off a breaker and react accordingly.
+
+\section{Conclusion}\label{conclusion}
+
+This paper focus on the functions contained in the package
+\pkg{extremefit} to estimate extreme quantiles and probabilities of
+rare events. The package \pkg{extremefit} works also well on large
+data sets and the performance was illustrated on simulated data and on
+real-world data sets.
+
+The choice of the pointwise data driven threshold allows a flexible
+estimation of the extreme quantiles. The diffusion of the use of this
+method for the scientific community will improve the choice of
+estimation of the extreme quantiles and probability of rare events
+using the peak-over-threshold approach.
+
+
+\section*{Acknowledgments}
+This work was supported by the ASPEET Grant from the Universit\'e
+Bretagne Sud and the Centre National de la Recherche
+Scientifique. Kevin Jaunatre would like to acknowledge the financial
+support of the SOLENN project.
+
+
+\bibliography{ref}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

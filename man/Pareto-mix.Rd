@@ -12,8 +12,15 @@ pparetomix(q, a = 1, b = 2, c = 0.75)
 
 dparetomix(x, a = 1, b = 2, c = 0.75)
 
-qparetomix(p, a = 1, b = 2, c = 0.75, precision = 10^(-10),
-  initvalue = 0.5, Nmax = 1000)
+qparetomix(
+  p,
+  a = 1,
+  b = 2,
+  c = 0.75,
+  precision = 10^(-10),
+  initvalue = 0.5,
+  Nmax = 1000
+)
 
 rparetomix(n, a = 1, b = 2, c = 0.75, precision = 10^(-10))
 }

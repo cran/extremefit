@@ -5,9 +5,19 @@
 \alias{print.hill.ts}
 \title{Compute the extreme quantile procedure on a time dependent data}
 \usage{
-hill.ts(X, t, Tgrid = seq(min(t), max(t), length = 10), h,
-  kernel = TruncGauss.kernel, kpar = NULL, CritVal = 3.6,
-  gridlen = 100, initprop = 1/10, r1 = 1/4, r2 = 1/20)
+hill.ts(
+  X,
+  t,
+  Tgrid = seq(min(t), max(t), length = 10),
+  h,
+  kernel = TruncGauss.kernel,
+  kpar = NULL,
+  CritVal = 3.6,
+  gridlen = 100,
+  initprop = 1/10,
+  r1 = 1/4,
+  r2 = 1/20
+)
 
 \method{print}{hill.ts}(x, ...)
 }

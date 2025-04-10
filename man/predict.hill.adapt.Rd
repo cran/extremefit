@@ -4,8 +4,7 @@
 \alias{predict.hill.adapt}
 \title{Predict the adaptive survival or quantile function}
 \usage{
-\method{predict}{hill.adapt}(object, newdata = NULL, type = "quantile",
-  input = NULL, ...)
+\method{predict}{hill.adapt}(object, newdata = NULL, type = "quantile", input = NULL, ...)
 }
 \arguments{
 \item{object}{output object of the function hill.adapt.}

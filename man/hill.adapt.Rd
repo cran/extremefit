@@ -4,8 +4,16 @@
 \alias{hill.adapt}
 \title{Compute the extreme quantile procedure}
 \usage{
-hill.adapt(X, weights = rep(1, length(X)), initprop = 1/10,
-  gridlen = 100, r1 = 1/4, r2 = 1/20, CritVal = 10, plot = F)
+hill.adapt(
+  X,
+  weights = rep(1, length(X)),
+  initprop = 1/10,
+  gridlen = 100,
+  r1 = 1/4,
+  r2 = 1/20,
+  CritVal = 10,
+  plot = F
+)
 }
 \arguments{
 \item{X}{a numeric vector of data values.}

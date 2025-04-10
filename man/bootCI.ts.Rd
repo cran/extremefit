@@ -4,10 +4,25 @@
 \alias{bootCI.ts}
 \title{Pointwise confidence intervals by bootstrap}
 \usage{
-bootCI.ts(X, t, Tgrid, h, kernel = TruncGauss.kernel, kpar = NULL,
-  prob = 0.99, threshold = quantile(X, 0.99), B = 100,
-  alpha = 0.05, type = "quantile", CritVal = 3.6, initprop = 1/10,
-  gridlen = 100, r1 = 1/4, r2 = 1/20, plot = F)
+bootCI.ts(
+  X,
+  t,
+  Tgrid,
+  h,
+  kernel = TruncGauss.kernel,
+  kpar = NULL,
+  prob = 0.99,
+  threshold = quantile(X, 0.99),
+  B = 100,
+  alpha = 0.05,
+  type = "quantile",
+  CritVal = 3.6,
+  initprop = 1/10,
+  gridlen = 100,
+  r1 = 1/4,
+  r2 = 1/20,
+  plot = F
+)
 }
 \arguments{
 \item{X}{a vector of the observed values.}

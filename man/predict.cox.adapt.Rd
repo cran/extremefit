@@ -4,9 +4,16 @@
 \alias{predict.cox.adapt}
 \title{Predict the survival or quantile function from the extreme procedure for the Cox model}
 \usage{
-\method{predict}{cox.adapt}(object, newdata = NULL, input = NULL,
-  type = "quantile", aggregation = "none", AggInd = object$kadapt,
-  M = 10, ...)
+\method{predict}{cox.adapt}(
+  object,
+  newdata = NULL,
+  input = NULL,
+  type = "quantile",
+  aggregation = "none",
+  AggInd = object$kadapt,
+  M = 10,
+  ...
+)
 }
 \arguments{
 \item{object}{output object of the function cox.adapt.}

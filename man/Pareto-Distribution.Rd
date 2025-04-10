@@ -46,15 +46,9 @@ If \eqn{shape}, \eqn{loc} or \eqn{scale} parameters are not specified, the respe
 
 The cumulative Pareto distribution is
 \deqn{
-  F(x) = 1- ((x-loc)/scale) ^ {-a},  x > loc,  a > 0, scale > 0
+  F(x) = 1- ((x-loc)/scale) ^ {-1/a},  x > 0,  a > 0, scale > 0
 }
 where \eqn{a} is the shape of the distribution.
-
-The density of the Pareto distribution is
-
-\deqn{
-  f(x) = (((x-loc)/scale)^( - a - 1) * a/scale) * (x-loc >= scale),  x > loc,  a > 0, scale > 0
-}
 }
 \examples{
 par(mfrow = c(3,1))

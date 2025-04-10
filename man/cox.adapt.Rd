@@ -4,9 +4,17 @@
 \alias{cox.adapt}
 \title{Compute the extreme quantile procedure for Cox model}
 \usage{
-cox.adapt(X, cph, cens = rep(1, length(X)), data = rep(0, length(X)),
-  initprop = 1/10, gridlen = 100, r1 = 1/4, r2 = 1/20,
-  CritVal = 10)
+cox.adapt(
+  X,
+  cph,
+  cens = rep(1, length(X)),
+  data = rep(0, length(X)),
+  initprop = 1/10,
+  gridlen = 100,
+  r1 = 1/4,
+  r2 = 1/20,
+  CritVal = 10
+)
 }
 \arguments{
 \item{X}{a numeric vector of data values.}
@@ -75,7 +83,7 @@ ca <- cox.adapt(X, cph, delta, Z)
 Grama, I. and Jaunatre, K. (2018). Estimation of Extreme Survival Probabilities with Cox Model. arXiv:1805.01638.
 }
 \seealso{
-\code{\link{coxph}}
+\code{\link[survival]{coxph}}
 }
 \author{
 Ion Grama, Kevin Jaunatre

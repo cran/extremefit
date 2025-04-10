@@ -4,8 +4,7 @@
 \alias{predict.hill.ts}
 \title{Predict the adaptive survival or quantile function for a time serie}
 \usage{
-\method{predict}{hill.ts}(object, newdata = NULL, type = "quantile",
-  input = NULL, ...)
+\method{predict}{hill.ts}(object, newdata = NULL, type = "quantile", input = NULL, ...)
 }
 \arguments{
 \item{object}{output object of the function hill.ts.}

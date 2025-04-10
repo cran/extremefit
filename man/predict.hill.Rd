@@ -4,8 +4,15 @@
 \alias{predict.hill}
 \title{Predict the adaptive survival or quantile function}
 \usage{
-\method{predict}{hill}(object, newdata = NULL, type = "quantile",
-  input = NULL, threshold.rank = 0, threshold = 0, ...)
+\method{predict}{hill}(
+  object,
+  newdata = NULL,
+  type = "quantile",
+  input = NULL,
+  threshold.rank = 0,
+  threshold = 0,
+  ...
+)
 }
 \arguments{
 \item{object}{output  object of the function hill.}

@@ -1,10 +1,24 @@
 Package: extremefit
 Type: Package
 Title: Estimation of Extreme Conditional Quantiles and Probabilities
-Version: 1.0.2
-Date: 2019-05-03
-Author: Gilles Durrieu, Ion Grama, Kevin Jaunatre, Quang-Khoai Pham, Jean-Marie
-    Tricot
+Version: 1.0.3
+Date: 2025-04-06
+Authors@R: c(person(given = "Gilles",
+                      family = "Durrieu",
+                      role = "aut"),
+               person(given = "Ion",
+                      family = "Grama",
+                      role = "aut"),
+               person(given = "Kevin",
+                      family = "Jaunatre",
+                      role = c("aut", "cre"),
+                      email = "kevin.jaunatre@hotmail.fr"),
+               person(given = "Quang-Khoai",
+                      family = "Pham",
+                      role = "aut"),
+               person(given = "Jean-Marie",
+                      family = "Tricot",
+                      role = "aut"))
 Depends: R (>= 2.10)
 Suggests: survival, R.rsp
 Maintainer: Kevin Jaunatre <kevin.jaunatre@hotmail.fr>
@@ -12,9 +26,14 @@ Description: Extreme value theory, nonparametric kernel estimation, tail
     conditional probabilities, extreme conditional quantile, adaptive estimation,
     quantile regression, survival probabilities.
 License: GPL-2
-RoxygenNote: 6.1.1
+RoxygenNote: 7.3.2
 VignetteBuilder: R.rsp
 NeedsCompilation: no
-Packaged: 2019-05-03 11:21:32 UTC; kevin
+Packaged: 2025-04-10 15:38:55 UTC; kevin
+Author: Gilles Durrieu [aut],
+  Ion Grama [aut],
+  Kevin Jaunatre [aut, cre],
+  Quang-Khoai Pham [aut],
+  Jean-Marie Tricot [aut]
 Repository: CRAN
-Date/Publication: 2019-05-04 08:50:03 UTC
+Date/Publication: 2025-04-10 19:20:22 UTC

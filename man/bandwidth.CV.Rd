@@ -4,9 +4,17 @@
 \alias{bandwidth.CV}
 \title{Choice of the bandwidth by cross validation.}
 \usage{
-bandwidth.CV(X, t, Tgrid, hgrid, pcv = 0.99,
-  kernel = TruncGauss.kernel, kpar = NULL, CritVal = 3.6,
-  plot = FALSE)
+bandwidth.CV(
+  X,
+  t,
+  Tgrid,
+  hgrid,
+  pcv = 0.99,
+  kernel = TruncGauss.kernel,
+  kpar = NULL,
+  CritVal = 3.6,
+  plot = FALSE
+)
 }
 \arguments{
 \item{X}{a vector of the observed values.}
